@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Europart Levering</title>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #111;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    .screen { display: none; flex-direction: column; height: 100dvh; }
+    .screen.active { display: flex; }
+
+    /* ── Main / Review ── */
+    #main-screen { padding: 16px; gap: 12px; }
+
+    .screen-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .screen-title { font-size: 20px; font-weight: 600; color: #e0e0e0; }
+
+    .btn-settings {
+      background: #2a2a2a;
+      border: none;
+      color: #aaa;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .order-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-right: 2px;
+    }
+
+    .empty-msg { color: #555; text-align: center; margin-top: 60px; font-size: 15px; }
+
+    .order-item { display: flex; align-items: center; gap: 8px; }
+    .order-item input {
+      flex: 1;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      color: #fff;
+      padding: 13px 12px;
+      border-radius: 10px;
+      font-size: 17px;
+      font-variant-numeric: tabular-nums;
+    }
+    .order-item input.mismatch {
+      border-color: #c0392b;
+      color: #ff6b6b;
+      background: #1e0f0f;
+    }
+    .btn-remove {
+      background: #2a2a2a;
+      border: none;
+      color: #888;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .bottom-bar { display: flex; gap: 10px; padding-top: 4px; }
+    .btn {
+      flex: 1;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-scan  { background: #1d4ed8; color: #fff; }
+    .btn-mail  { background: #15803d; color: #fff; }
+    .btn-mail:disabled { background: #2a2a2a; color: #555; cursor: default; }
+
+    /* ── Scan screen ── */
+    #scan-screen { position: relative; background: #000; }
+
+    #video {
+      width: 100%;
+      height: 100dvh;
+      object-fit: cover;
+      display: block;
+    }
+
+    canvas { display: none; }
+
+    /* Transparent result overlay */
+    #scan-result {
+      position: absolute;
+      bottom: 120px;
+      left: 16px; right: 16px;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(4px);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: none;
+    }
+    #scan-result.visible { display: block; }
+    .result-label { font-size: 11px; color: #aaa; margin-bottom: 4px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .result-number { font-size: 22px; font-weight: 700; color: #4ade80; line-height: 1.3; }
+
+    /* Processing spinner */
+    #processing {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.72);
+      padding: 20px 32px;
+      border-radius: 14px;
+      font-size: 16px;
+      display: none;
+    }
+    #processing.visible { display: block; }
+
+    /* Bottom bar on scan screen */
+    .scan-bar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 36px;
+      padding-bottom: max(20px, env(safe-area-inset-bottom));
+    }
+
+    .btn-back {
+      background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.6);
+      color: #fff;
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    .btn-capture {
+      background: #fff;
+      border: 5px solid #888;
+      color: #111;
+      width: 76px; height: 76px;
+      border-radius: 50%;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+    }
+    .btn-capture:disabled { opacity: 0.45; cursor: default; }
+
+    .scan-spacer { width: 56px; }
+
+    /* ── Settings modal ── */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.82);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.active { display: flex; }
+    .modal-box {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 18px;
+      padding: 24px;
+      width: 90%;
+      max-width: 380px;
+    }
+    .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 18px; }
+    .modal-box label { font-size: 13px; color: #888; display: block; margin-bottom: 5px; }
+    .modal-box input {
+      width: 100%;
+      background: #111;
+      border: 1px solid #333;
+      color: #fff;
+      padding: 12px;
+      border-radius: 9px;
+      font-size: 15px;
+      margin-bottom: 20px;
+    }
+    .modal-buttons { display: flex; gap: 10px; }
+    .btn-save   { background: #1d4ed8; color: #fff; }
+    .btn-cancel { background: #2a2a2a; color: #aaa; }
+  </style>
+</head>
+<body>
+
+<!-- ── Main / Review ── -->
+<div id="main-screen" class="screen active">
+  <div class="screen-header">
+    <div class="screen-title">Leverancer</div>
+    <button class="btn-settings" onclick="openSettings()">⚙</button>
+  </div>
+
+  <div class="order-list" id="order-list">
+    <div class="empty-msg">Ingen ordrer scannet endnu</div>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="btn btn-scan" onclick="goToScan()">📷 Scan</button>
+    <button class="btn btn-mail" id="mail-btn" onclick="openMail()" disabled>✉ Dan mail</button>
+  </div>
+</div>
+
+<!-- ── Scan ── -->
+<div id="scan-screen" class="screen">
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="canvas"></canvas>
+
+  <div id="scan-result">
+    <div class="result-label">Aflæst</div>
+    <div id="result-numbers"></div>
+  </div>
+
+  <div id="processing">Aflæser…</div>
+
+  <div class="scan-bar">
+    <button class="btn-back" onclick="goToMain()">✕</button>
+    <button class="btn-capture" id="capture-btn" onclick="captureAndScan()">SCAN</button>
+    <div class="scan-spacer"></div>
+  </div>
+</div>
+
+<!-- ── Settings ── -->
+<div class="modal" id="settings-modal">
+  <div class="modal-box">
+    <div class="modal-title">Indstillinger</div>
+    <label>Modtager-email</label>
+    <input type="email" id="setting-email" placeholder="europartfraget@gmail.com">
+    <div class="modal-buttons">
+      <button class="btn btn-save"   onclick="saveSettings()">Gem</button>
+      <button class="btn btn-cancel" onclick="closeSettings()">Annuller</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────
+// orders: [{ id, numbers: [string], address: string }]
+let orders = [];
+let stream  = null;
+
+const settings = {
+  email: localStorage.getItem('recipient_email') || 'europartfraget@gmail.com'
+};
+
+// ── Audio ──────────────────────────────────────────────────
+function beep(freq, dur) {
+  const ctx  = new AudioContext();
+  const osc  = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0.3, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+  osc.start();
+  osc.stop(ctx.currentTime + dur);
+}
+const playBip   = () => beep(880, 0.12);
+const playError = () => beep(220, 0.45);
+
+// ── Navigation ─────────────────────────────────────────────
+function goToScan() {
+  show('scan-screen');
+  hide('main-screen');
+  startCamera();
+}
+
+function goToMain() {
+  stopCamera();
+  document.getElementById('scan-result').classList.remove('visible');
+  hide('scan-screen');
+  show('main-screen');
+  renderOrderList();
+}
+
+function show(id) { document.getElementById(id).classList.add('active'); }
+function hide(id) { document.getElementById(id).classList.remove('active'); }
+
+// ── Camera ─────────────────────────────────────────────────
+async function startCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1920 } }
+    });
+    document.getElementById('video').srcObject = stream;
+  } catch (e) {
+    alert('Kamera ikke tilgængeligt: ' + e.message);
+  }
+}
+
+function stopCamera() {
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+}
+
+// ── OCR ────────────────────────────────────────────────────
+async function captureAndScan() {
+  const btn        = document.getElementById('capture-btn');
+  const processing = document.getElementById('processing');
+
+  btn.disabled = true;
+  processing.classList.add('visible');
+
+  const video  = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  canvas.width  = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+
+  try {
+    const result     = await Tesseract.recognize(canvas, 'dan+eng', { logger: () => {} });
+    const text       = result.data.text;
+    const confidence = result.data.confidence;
+
+    // Order numbers: one or more 5-7 digit groups, comma-separated, then /initials
+    const orderMatch = text.match(/(\d{5,7}(?:\s*,\s*\d{5,7})*)\s*\/\s*[a-zA-Z]{1,4}/);
+
+    // Destination address: "DK-XXXX Town"
+    const addrMatch  = text.match(/DK-\d{4}\s+[\wæøåÆØÅ]+/i);
+    const address    = addrMatch ? addrMatch[0].trim() : '';
+
+    if (orderMatch && confidence > 25) {
+      const numbers = orderMatch[1].split(/\s*,\s*/).map(n => n.trim());
+      orders.push({ id: Date.now(), numbers, address });
+
+      document.getElementById('result-numbers').innerHTML =
+        numbers.map(n => `<div class="result-number">${n}</div>`).join('');
+      document.getElementById('scan-result').classList.add('visible');
+
+      playBip();
+    } else {
+      playError();
+      const manual = prompt('Kunne ikke aflæse ordrenummer (sikkerhed: ' + Math.round(confidence) + '%).\nIndtast ordrenummer(e), kommasepareret:');
+      if (manual && manual.trim()) {
+        const numbers = manual.split(',').map(s => s.trim()).filter(Boolean);
+        orders.push({ id: Date.now(), numbers, address });
+        document.getElementById('result-numbers').innerHTML =
+          numbers.map(n => `<div class="result-number">${n}</div>`).join('');
+        document.getElementById('scan-result').classList.add('visible');
+      }
+    }
+  } catch (e) {
+    playError();
+    alert('Fejl under aflæsning: ' + e.message);
+  }
+
+  processing.classList.remove('visible');
+  btn.disabled = false;
+}
+
+// ── Review list ────────────────────────────────────────────
+function renderOrderList() {
+  const list = document.getElementById('order-list');
+
+  if (orders.length === 0) {
+    list.innerHTML = '<div class="empty-msg">Ingen ordrer scannet endnu</div>';
+    document.getElementById('mail-btn').disabled = true;
+    return;
+  }
+
+  // Dominant address = most frequent non-empty address
+  const addrs = orders.map(o => o.address).filter(Boolean);
+  const freq  = {};
+  addrs.forEach(a => { freq[a] = (freq[a] || 0) + 1; });
+  const dominant = Object.keys(freq).sort((a, b) => freq[b] - freq[a])[0] || null;
+
+  list.innerHTML = orders.flatMap(order =>
+    order.numbers.map((num, i) => {
+      const mismatch = dominant && order.address && order.address !== dominant;
+      const title    = mismatch ? `title="Adresse afviger: ${order.address}"` : '';
+      return `
+        <div class="order-item">
+          <input type="text" value="${escHtml(num)}"
+            class="${mismatch ? 'mismatch' : ''}" ${title}
+            onchange="updateNumber(${order.id}, ${i}, this.value)">
+          <button class="btn-remove" onclick="removeNumber(${order.id}, ${i})">✕</button>
+        </div>`;
+    })
+  ).join('');
+
+  document.getElementById('mail-btn').disabled = false;
+}
+
+function updateNumber(orderId, idx, val) {
+  const o = orders.find(o => o.id === orderId);
+  if (o) o.numbers[idx] = val;
+}
+
+function removeNumber(orderId, idx) {
+  const o = orders.find(o => o.id === orderId);
+  if (!o) return;
+  o.numbers.splice(idx, 1);
+  if (o.numbers.length === 0) orders = orders.filter(x => x.id !== orderId);
+  renderOrderList();
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Mail ───────────────────────────────────────────────────
+function openMail() {
+  const subject = orders.flatMap(o => o.numbers).join(', ');
+  window.location.href = `mailto:${settings.email}?subject=${encodeURIComponent(subject)}`;
+}
+
+// ── Settings ───────────────────────────────────────────────
+function openSettings() {
+  document.getElementById('setting-email').value = settings.email;
+  document.getElementById('settings-modal').classList.add('active');
+}
+function saveSettings() {
+  settings.email = document.getElementById('setting-email').value.trim();
+  localStorage.setItem('recipient_email', settings.email);
+  closeSettings();
+}
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('active');
+}
+</script>
+</body>
+</html>
