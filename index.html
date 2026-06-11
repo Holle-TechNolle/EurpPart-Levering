@@ -18,7 +18,7 @@
     .screen { display: none; flex-direction: column; height: 100dvh; }
     .screen.active { display: flex; }
 
-    /* ── Main / Review ── */
+    /* Main / Review */
     #main-screen { padding: 16px; gap: 12px; }
 
     .screen-header {
@@ -90,7 +90,7 @@
     .btn-mail  { background: #15803d; color: #fff; }
     .btn-mail:disabled { background: #2a2a2a; color: #555; cursor: default; }
 
-    /* ── Scan screen ── */
+    /* Scan screen */
     #scan-screen { position: relative; background: #000; }
 
     #video {
@@ -102,7 +102,6 @@
 
     canvas { display: none; }
 
-    /* Transparent result overlay */
     #scan-result {
       position: absolute;
       bottom: 120px;
@@ -116,8 +115,8 @@
     #scan-result.visible { display: block; }
     .result-label { font-size: 11px; color: #aaa; margin-bottom: 4px; letter-spacing: 0.05em; text-transform: uppercase; }
     .result-number { font-size: 22px; font-weight: 700; color: #4ade80; line-height: 1.3; }
+    .result-dup    { font-size: 22px; font-weight: 700; color: #888;    line-height: 1.3; }
 
-    /* Processing spinner */
     #processing {
       position: absolute;
       top: 50%; left: 50%;
@@ -130,7 +129,6 @@
     }
     #processing.visible { display: block; }
 
-    /* Bottom bar on scan screen */
     .scan-bar {
       position: absolute;
       bottom: 0; left: 0; right: 0;
@@ -166,7 +164,7 @@
 
     .scan-spacer { width: 56px; }
 
-    /* ── Settings modal ── */
+    /* Settings modal */
     .modal {
       display: none;
       position: fixed;
@@ -204,7 +202,7 @@
 </head>
 <body>
 
-<!-- ── Main / Review ── -->
+<!-- Main / Review -->
 <div id="main-screen" class="screen active">
   <div class="screen-header">
     <div class="screen-title">Leverancer</div>
@@ -221,7 +219,7 @@
   </div>
 </div>
 
-<!-- ── Scan ── -->
+<!-- Scan -->
 <div id="scan-screen" class="screen">
   <video id="video" autoplay playsinline muted></video>
   <canvas id="canvas"></canvas>
@@ -240,7 +238,7 @@
   </div>
 </div>
 
-<!-- ── Settings ── -->
+<!-- Settings -->
 <div class="modal" id="settings-modal">
   <div class="modal-box">
     <div class="modal-title">Indstillinger</div>
@@ -255,13 +253,28 @@
 
 <script>
 // ── State ──────────────────────────────────────────────────
-// orders: [{ id, numbers: [string], address: string }]
-let orders = [];
-let stream  = null;
+// Flat liste: ét objekt pr. ordrenummer
+// { id: number, number: string, address: string }
+let items  = [];
+let stream = null;
+
+// Tesseract worker genbruges på tværs af scan-kald
+let worker = null;
 
 const settings = {
   email: localStorage.getItem('recipient_email') || 'europartfraget@gmail.com'
 };
+
+// ── Tesseract worker init ──────────────────────────────────
+// Initialiseres én gang når appen loader — undgår cold-start ved første scan
+async function initWorker() {
+  worker = await Tesseract.createWorker('eng', 1, { logger: () => {} });
+  await worker.setParameters({
+    tessedit_pageseg_mode: '6',
+    tessedit_char_whitelist: '0123456789,/abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ -'
+  });
+}
+initWorker();
 
 // ── Audio ──────────────────────────────────────────────────
 function beep(freq, dur) {
@@ -287,6 +300,7 @@ function goToScan() {
 }
 
 function goToMain() {
+  setTorch(false);
   stopCamera();
   document.getElementById('scan-result').classList.remove('visible');
   hide('scan-screen');
@@ -313,49 +327,128 @@ function stopCamera() {
   if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
 }
 
+async function setTorch(on) {
+  if (!stream) return;
+  const track = stream.getVideoTracks()[0];
+  if (!track) return;
+  try {
+    await track.applyConstraints({ advanced: [{ torch: on }] });
+  } catch (_) {
+    // Torch ikke understøttet på denne enhed — ignorer stille
+  }
+}
+
+// ── Billede-preprocessing ──────────────────────────────────
+// Crop til midterste 60% + 2x scale + gråskala + kontrast-boost
+// Returnerer et OffscreenCanvas (eller almindeligt canvas som fallback)
+function preprocessFrame(video) {
+  const srcW  = video.videoWidth;
+  const srcH  = video.videoHeight;
+  const cropY = Math.floor(srcH * 0.2);
+  const cropH = Math.floor(srcH * 0.6);
+  const dstW  = srcW * 2;
+  const dstH  = cropH * 2;
+
+  // OffscreenCanvas er hurtigere (ingen DOM-repaint)
+  const canvas = typeof OffscreenCanvas !== 'undefined'
+    ? new OffscreenCanvas(dstW, dstH)
+    : document.getElementById('canvas');
+
+  if (!(canvas instanceof OffscreenCanvas)) {
+    canvas.width  = dstW;
+    canvas.height = dstH;
+  }
+
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, cropY, srcW, cropH, 0, 0, dstW, dstH);
+
+  const imgData = ctx.getImageData(0, 0, dstW, dstH);
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const gray = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+    const c    = gray < 128 ? Math.max(0, gray - 40) : Math.min(255, gray + 40);
+    d[i] = d[i+1] = d[i+2] = c;
+    // Alpha uændret
+  }
+  ctx.putImageData(imgData, 0, 0);
+
+  return canvas;
+}
+
 // ── OCR ────────────────────────────────────────────────────
 async function captureAndScan() {
   const btn        = document.getElementById('capture-btn');
   const processing = document.getElementById('processing');
 
   btn.disabled = true;
+
+  // Tænd lys
+  await setTorch(true);
+
+  // Kort pause så kamera kan justere eksponering
+  await new Promise(r => setTimeout(r, 150));
+
   processing.classList.add('visible');
 
   const video  = document.getElementById('video');
-  const canvas = document.getElementById('canvas');
-  canvas.width  = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0);
+  const canvas = preprocessFrame(video);
+
+  // Sluk lys med det samme
+  setTorch(false);
 
   try {
-    const result     = await Tesseract.recognize(canvas, 'dan+eng', { logger: () => {} });
+    // Brug persistent worker hvis klar, ellers fallback
+    const engine = worker || Tesseract;
+    const result = worker
+      ? await worker.recognize(canvas)
+      : await Tesseract.recognize(canvas, 'eng', {
+          logger: () => {},
+          tessedit_pageseg_mode: '6',
+          tessedit_char_whitelist: '0123456789,/abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ -'
+        });
+
     const text       = result.data.text;
     const confidence = result.data.confidence;
 
-    // Order numbers: one or more 5-7 digit groups, comma-separated, then /initials
+    // Ordrenumre: 5-7 cifre, kommasepareret, efterfulgt af /initialer
     const orderMatch = text.match(/(\d{5,7}(?:\s*,\s*\d{5,7})*)\s*\/\s*[a-zA-Z]{1,4}/);
 
-    // Destination address: "DK-XXXX Town"
-    const addrMatch  = text.match(/DK-\d{4}\s+[\wæøåÆØÅ]+/i);
-    const address    = addrMatch ? addrMatch[0].trim() : '';
+    // Destinationsadresse: "DK-XXXX By"
+    const addrMatch = text.match(/DK-\d{4}\s+[A-Za-z]+/i);
+    const address   = addrMatch ? addrMatch[0].trim() : '';
 
     if (orderMatch && confidence > 25) {
-      const numbers = orderMatch[1].split(/\s*,\s*/).map(n => n.trim());
-      orders.push({ id: Date.now(), numbers, address });
+      const numbers  = orderMatch[1].split(/\s*,\s*/).map(n => n.trim());
+      const existing = new Set(items.map(o => o.number));
 
-      document.getElementById('result-numbers').innerHTML =
-        numbers.map(n => `<div class="result-number">${n}</div>`).join('');
+      const lines = numbers.map(num => {
+        if (existing.has(num)) {
+          // Dublet — tilføj ikke, men vis grå
+          return `<div class="result-dup">${num} (allerede på liste)</div>`;
+        }
+        items.push({ id: Date.now() + Math.random(), number: num, address });
+        return `<div class="result-number">${num}</div>`;
+      });
+
+      document.getElementById('result-numbers').innerHTML = lines.join('');
       document.getElementById('scan-result').classList.add('visible');
-
       playBip();
+
     } else {
       playError();
-      const manual = prompt('Kunne ikke aflæse ordrenummer (sikkerhed: ' + Math.round(confidence) + '%).\nIndtast ordrenummer(e), kommasepareret:');
+      const manual = prompt(
+        'Kunne ikke aflæse ordrenummer (sikkerhed: ' + Math.round(confidence) + '%).\n' +
+        'Indtast ordrenummer(e), kommasepareret:'
+      );
       if (manual && manual.trim()) {
-        const numbers = manual.split(',').map(s => s.trim()).filter(Boolean);
-        orders.push({ id: Date.now(), numbers, address });
-        document.getElementById('result-numbers').innerHTML =
-          numbers.map(n => `<div class="result-number">${n}</div>`).join('');
+        const numbers  = manual.split(',').map(s => s.trim()).filter(Boolean);
+        const existing = new Set(items.map(o => o.number));
+        const lines    = numbers.map(num => {
+          if (existing.has(num)) return `<div class="result-dup">${num} (allerede på liste)</div>`;
+          items.push({ id: Date.now() + Math.random(), number: num, address: '' });
+          return `<div class="result-number">${num}</div>`;
+        });
+        document.getElementById('result-numbers').innerHTML = lines.join('');
         document.getElementById('scan-result').classList.add('visible');
       }
     }
@@ -372,45 +465,39 @@ async function captureAndScan() {
 function renderOrderList() {
   const list = document.getElementById('order-list');
 
-  if (orders.length === 0) {
+  if (items.length === 0) {
     list.innerHTML = '<div class="empty-msg">Ingen ordrer scannet endnu</div>';
     document.getElementById('mail-btn').disabled = true;
     return;
   }
 
-  // Dominant address = most frequent non-empty address
-  const addrs = orders.map(o => o.address).filter(Boolean);
-  const freq  = {};
-  addrs.forEach(a => { freq[a] = (freq[a] || 0) + 1; });
+  // Dominant adresse = hyppigst forekommende ikke-tom adresse
+  const freq = {};
+  items.forEach(o => { if (o.address) freq[o.address] = (freq[o.address] || 0) + 1; });
   const dominant = Object.keys(freq).sort((a, b) => freq[b] - freq[a])[0] || null;
 
-  list.innerHTML = orders.flatMap(order =>
-    order.numbers.map((num, i) => {
-      const mismatch = dominant && order.address && order.address !== dominant;
-      const title    = mismatch ? `title="Adresse afviger: ${order.address}"` : '';
-      return `
-        <div class="order-item">
-          <input type="text" value="${escHtml(num)}"
-            class="${mismatch ? 'mismatch' : ''}" ${title}
-            onchange="updateNumber(${order.id}, ${i}, this.value)">
-          <button class="btn-remove" onclick="removeNumber(${order.id}, ${i})">✕</button>
-        </div>`;
-    })
-  ).join('');
+  list.innerHTML = items.map(item => {
+    const mismatch = dominant && item.address && item.address !== dominant;
+    const title    = mismatch ? `title="Adresse afviger: ${item.address}"` : '';
+    return `
+      <div class="order-item">
+        <input type="text" value="${escHtml(item.number)}"
+          class="${mismatch ? 'mismatch' : ''}" ${title}
+          onchange="updateItem('${item.id}', this.value)">
+        <button class="btn-remove" onclick="removeItem('${item.id}')">✕</button>
+      </div>`;
+  }).join('');
 
   document.getElementById('mail-btn').disabled = false;
 }
 
-function updateNumber(orderId, idx, val) {
-  const o = orders.find(o => o.id === orderId);
-  if (o) o.numbers[idx] = val;
+function updateItem(id, val) {
+  const item = items.find(o => o.id == id);
+  if (item) item.number = val;
 }
 
-function removeNumber(orderId, idx) {
-  const o = orders.find(o => o.id === orderId);
-  if (!o) return;
-  o.numbers.splice(idx, 1);
-  if (o.numbers.length === 0) orders = orders.filter(x => x.id !== orderId);
+function removeItem(id) {
+  items = items.filter(o => o.id != id);
   renderOrderList();
 }
 
@@ -420,8 +507,10 @@ function escHtml(s) {
 
 // ── Mail ───────────────────────────────────────────────────
 function openMail() {
-  const subject = orders.flatMap(o => o.numbers).join(', ');
+  const subject = items.map(o => o.number).join(', ');
   window.location.href = `mailto:${settings.email}?subject=${encodeURIComponent(subject)}`;
+  items = [];
+  renderOrderList();
 }
 
 // ── Settings ───────────────────────────────────────────────
