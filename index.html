@@ -20,221 +20,186 @@
 
     /* Main / Review */
     #main-screen { padding: 16px; gap: 12px; }
-
-    .screen-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .screen-header { display: flex; justify-content: space-between; align-items: center; }
+    .screen-title  { font-size: 20px; font-weight: 600; color: #e0e0e0; }
+    .btn-settings  {
+      background: #2a2a2a; border: none; color: #aaa;
+      width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer;
     }
-    .screen-title { font-size: 20px; font-weight: 600; color: #e0e0e0; }
-
-    .btn-settings {
-      background: #2a2a2a;
-      border: none;
-      color: #aaa;
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      font-size: 18px;
-      cursor: pointer;
-    }
-
     .order-list {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding-right: 2px;
+      flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 2px;
     }
-
     .empty-msg { color: #555; text-align: center; margin-top: 60px; font-size: 15px; }
-
     .order-item { display: flex; align-items: center; gap: 8px; }
     .order-item input {
-      flex: 1;
-      background: #1e1e1e;
-      border: 1px solid #333;
-      color: #fff;
-      padding: 13px 12px;
-      border-radius: 10px;
-      font-size: 17px;
-      font-variant-numeric: tabular-nums;
+      flex: 1; background: #1e1e1e; border: 1px solid #333; color: #fff;
+      padding: 13px 12px; border-radius: 10px; font-size: 17px; font-variant-numeric: tabular-nums;
     }
-    .order-item input.mismatch {
-      border-color: #c0392b;
-      color: #ff6b6b;
-      background: #1e0f0f;
-    }
+    .order-item input.mismatch { border-color: #c0392b; color: #ff6b6b; background: #1e0f0f; }
     .btn-remove {
-      background: #2a2a2a;
-      border: none;
-      color: #888;
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      font-size: 18px;
-      cursor: pointer;
-      flex-shrink: 0;
+      background: #2a2a2a; border: none; color: #888;
+      width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; flex-shrink: 0;
     }
-
     .bottom-bar { display: flex; gap: 10px; padding-top: 4px; }
-    .btn {
-      flex: 1;
-      padding: 16px;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-    }
+    .btn { flex: 1; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; }
     .btn-scan  { background: #1d4ed8; color: #fff; }
     .btn-mail  { background: #15803d; color: #fff; }
     .btn-mail:disabled { background: #2a2a2a; color: #555; cursor: default; }
 
     /* Scan screen */
     #scan-screen { position: relative; background: #000; }
+    #video { width: 100%; height: 100dvh; object-fit: cover; display: block; }
 
-    #video {
-      width: 100%;
-      height: 100dvh;
-      object-fit: cover;
-      display: block;
+    /* Crop rectangle overlay */
+    #crop-outline {
+      position: absolute;
+      left: 0; right: 0;
+      border: 2px solid rgba(0, 220, 100, 0.8);
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.35);
+      pointer-events: none;
     }
+    #crop-outline::before, #crop-outline::after {
+      content: ''; position: absolute;
+      width: 20px; height: 20px; border-color: #00dc64; border-style: solid;
+    }
+    #crop-outline::before { top: -2px; left: -2px; border-width: 3px 0 0 3px; }
+    #crop-outline::after  { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; }
+
+    /* Capture preview overlay */
+    #capture-preview {
+      display: none; position: absolute; inset: 0;
+      background: #000; z-index: 10;
+      align-items: center; justify-content: center;
+    }
+    #capture-preview.visible { display: flex; }
+    #capture-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    #preview-label {
+      position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.6); padding: 6px 14px; border-radius: 20px;
+      font-size: 13px; color: #aaa; white-space: nowrap;
+    }
+    #preview-status {
+      position: absolute; bottom: 180px; left: 16px; right: 16px;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+      border-radius: 12px; padding: 12px 16px; font-size: 15px; text-align: center;
+    }
+
+    /* Custom manual input dialog */
+    #manual-dialog {
+      display: none; position: absolute; inset: 0; z-index: 20;
+      flex-direction: column; align-items: stretch; justify-content: flex-end;
+    }
+    #manual-dialog.visible { display: flex; }
+
+    #manual-bg { position: absolute; inset: 0; }
+    #manual-bg img { width: 100%; height: 100%; object-fit: contain; background: #000; }
+
+    #manual-panel {
+      position: relative; z-index: 1;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(6px);
+      padding: 12px 16px 0;
+    }
+
+    #manual-display {
+      background: #1a1a1a; border: 1px solid #444; border-radius: 10px;
+      padding: 14px 16px; font-size: 22px; font-variant-numeric: tabular-nums;
+      color: #fff; min-height: 52px; margin-bottom: 10px;
+      letter-spacing: 0.05em;
+    }
+    #manual-display.has-content { color: #fff; }
+    #manual-display:empty::after { content: 'Indtast ordrenummer…'; color: #555; font-size: 16px; }
+
+    /* Custom numpad */
+    #numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .np-btn {
+      background: #2a2a2a; border: none; color: #fff;
+      padding: 16px 0; border-radius: 8px;
+      font-size: 20px; font-weight: 500; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .np-btn:active { background: #444; }
+    .np-btn.np-special { color: #aaa; font-size: 16px; }
+    .np-btn.np-comma   { font-size: 24px; font-weight: 700; }
+
+    #manual-actions {
+      display: flex; gap: 8px; margin-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+    .btn-manual-ok     { background: #15803d; color: #fff; }
+    .btn-manual-cancel { background: #2a2a2a; color: #aaa; }
 
     canvas { display: none; }
 
     #scan-result {
-      position: absolute;
-      bottom: 120px;
-      left: 16px; right: 16px;
-      background: rgba(0,0,0,0.55);
-      backdrop-filter: blur(4px);
-      border-radius: 12px;
-      padding: 12px 16px;
-      display: none;
+      position: absolute; bottom: 120px; left: 16px; right: 16px;
+      background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+      border-radius: 12px; padding: 12px 16px; display: none;
     }
     #scan-result.visible { display: block; }
     .result-label  { font-size: 11px; color: #aaa; margin-bottom: 4px; letter-spacing: 0.05em; text-transform: uppercase; }
     .result-number { font-size: 22px; font-weight: 700; color: #4ade80; line-height: 1.3; }
     .result-dup    { font-size: 22px; font-weight: 700; color: #888;    line-height: 1.3; }
 
-    #processing {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.72);
-      padding: 20px 32px;
-      border-radius: 14px;
-      font-size: 16px;
-      display: none;
-    }
-    #processing.visible { display: block; }
-
     .scan-bar {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 36px;
-      padding-bottom: max(20px, env(safe-area-inset-bottom));
+      position: absolute; bottom: 0; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 36px; padding-bottom: max(20px, env(safe-area-inset-bottom));
+      z-index: 5;
     }
-
     .btn-back {
-      background: rgba(255,255,255,0.15);
-      border: 2px solid rgba(255,255,255,0.6);
-      color: #fff;
-      width: 56px; height: 56px;
-      border-radius: 50%;
-      font-size: 22px;
-      cursor: pointer;
+      background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.6); color: #fff;
+      width: 56px; height: 56px; border-radius: 50%; font-size: 22px; cursor: pointer;
     }
-
     .btn-capture {
-      background: #fff;
-      border: 5px solid #888;
-      color: #111;
-      width: 76px; height: 76px;
-      border-radius: 50%;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      letter-spacing: 0.03em;
+      background: #fff; border: 5px solid #888; color: #111;
+      width: 76px; height: 76px; border-radius: 50%; font-size: 13px;
+      font-weight: 700; cursor: pointer; letter-spacing: 0.03em;
     }
     .btn-capture:disabled { opacity: 0.45; cursor: default; }
-
     .scan-spacer { width: 56px; }
 
     /* Settings modal */
     .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.82);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.82); z-index: 200;
+      align-items: center; justify-content: center;
     }
     .modal.active { display: flex; }
     .modal-box {
-      background: #1e1e1e;
-      border: 1px solid #333;
-      border-radius: 18px;
-      padding: 24px;
-      width: 90%;
-      max-width: 420px;
-      max-height: 90dvh;
-      overflow-y: auto;
+      background: #1e1e1e; border: 1px solid #333; border-radius: 18px;
+      padding: 24px; width: 90%; max-width: 420px; max-height: 90dvh; overflow-y: auto;
     }
     .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
     .modal-section {
-      font-size: 11px;
-      color: #555;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin: 18px 0 10px;
-      border-bottom: 1px solid #2a2a2a;
-      padding-bottom: 4px;
+      font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.08em;
+      margin: 18px 0 10px; border-bottom: 1px solid #2a2a2a; padding-bottom: 4px;
     }
     .modal-box label { font-size: 13px; color: #888; display: block; margin-bottom: 4px; margin-top: 10px; }
     .modal-box input[type=email],
     .modal-box input[type=number] {
-      width: 100%;
-      background: #111;
-      border: 1px solid #333;
-      color: #fff;
-      padding: 11px 12px;
-      border-radius: 9px;
-      font-size: 15px;
+      width: 100%; background: #111; border: 1px solid #333; color: #fff;
+      padding: 11px 12px; border-radius: 9px; font-size: 15px;
     }
-    .setting-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 10px;
-    }
+    .setting-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
     .setting-row label { margin: 0; }
-    /* Toggle switch */
     .toggle { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
     .toggle input { opacity: 0; width: 0; height: 0; }
     .toggle-track {
-      position: absolute; inset: 0;
-      background: #333;
-      border-radius: 13px;
-      cursor: pointer;
-      transition: background 0.2s;
+      position: absolute; inset: 0; background: #333; border-radius: 13px;
+      cursor: pointer; transition: background 0.2s;
     }
     .toggle input:checked + .toggle-track { background: #1d4ed8; }
     .toggle-track::after {
-      content: '';
-      position: absolute;
-      width: 20px; height: 20px;
-      background: #fff;
-      border-radius: 50%;
-      top: 3px; left: 3px;
-      transition: transform 0.2s;
+      content: ''; position: absolute; width: 20px; height: 20px;
+      background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s;
     }
     .toggle input:checked + .toggle-track::after { transform: translateX(18px); }
-
     .modal-hint { font-size: 11px; color: #444; margin-top: 4px; }
     .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
     .btn-save   { background: #1d4ed8; color: #fff; }
@@ -249,11 +214,9 @@
     <div class="screen-title">Leverancer</div>
     <button class="btn-settings" onclick="openSettings()">⚙</button>
   </div>
-
   <div class="order-list" id="order-list">
     <div class="empty-msg">Ingen ordrer scannet endnu</div>
   </div>
-
   <div class="bottom-bar">
     <button class="btn btn-scan" onclick="goToScan()">📷 Scan</button>
     <button class="btn btn-mail" id="mail-btn" onclick="openMail()" disabled>✉ Dan mail</button>
@@ -265,12 +228,45 @@
   <video id="video" autoplay playsinline muted></video>
   <canvas id="canvas"></canvas>
 
+  <div id="crop-outline"></div>
+
+  <!-- Preprocesseret capture preview -->
+  <div id="capture-preview" onclick="dismissPreview()">
+    <div id="preview-label">Tryk for at lukke</div>
+    <img id="preview-img" src="" alt="">
+    <div id="preview-status">Aflæser…</div>
+  </div>
+
+  <!-- Custom manuel indtastning -->
+  <div id="manual-dialog">
+    <div id="manual-bg"><img id="manual-bg-img" src="" alt=""></div>
+    <div id="manual-panel">
+      <div id="manual-display"></div>
+      <div id="numpad">
+        <button class="np-btn" onclick="npInput('1')">1</button>
+        <button class="np-btn" onclick="npInput('2')">2</button>
+        <button class="np-btn" onclick="npInput('3')">3</button>
+        <button class="np-btn" onclick="npInput('4')">4</button>
+        <button class="np-btn" onclick="npInput('5')">5</button>
+        <button class="np-btn" onclick="npInput('6')">6</button>
+        <button class="np-btn" onclick="npInput('7')">7</button>
+        <button class="np-btn" onclick="npInput('8')">8</button>
+        <button class="np-btn" onclick="npInput('9')">9</button>
+        <button class="np-btn np-comma"   onclick="npInput(',')">،</button>
+        <button class="np-btn" onclick="npInput('0')">0</button>
+        <button class="np-btn np-special" onclick="npBackspace()">⌫</button>
+      </div>
+      <div id="manual-actions">
+        <button class="btn btn-manual-cancel" onclick="closeManual()">Annuller</button>
+        <button class="btn btn-manual-ok"     onclick="confirmManual()">OK</button>
+      </div>
+    </div>
+  </div>
+
   <div id="scan-result">
     <div class="result-label">Aflæst</div>
     <div id="result-numbers"></div>
   </div>
-
-  <div id="processing">Aflæser…</div>
 
   <div class="scan-bar">
     <button class="btn-back" onclick="goToMain()">✕</button>
@@ -291,10 +287,7 @@
     <div class="modal-section">Kamera</div>
     <div class="setting-row">
       <label>Brug lygten ved scan</label>
-      <label class="toggle">
-        <input type="checkbox" id="s-torch">
-        <div class="toggle-track"></div>
-      </label>
+      <label class="toggle"><input type="checkbox" id="s-torch"><div class="toggle-track"></div></label>
     </div>
     <label>Lygteforsinkelse (ms)</label>
     <input type="number" id="s-torch-delay" min="0" max="1000" step="50">
@@ -330,23 +323,24 @@
 
 <script>
 // ── State ──────────────────────────────────────────────────
-let items  = [];
-let stream = null;
-let worker = null;
+let items        = [];
+let stream       = null;
+let worker       = null;
+let manualInput  = '';
+let lastDataUrl  = '';
 
 // ── Settings ───────────────────────────────────────────────
 function loadSettings() {
-  const d = {
-    email:       localStorage.getItem('s-email')       || 'europartfraget@gmail.com',
-    torch:       localStorage.getItem('s-torch')       !== 'false',
-    torchDelay:  parseInt(localStorage.getItem('s-torch-delay')  || '150'),
-    confidence:  parseInt(localStorage.getItem('s-confidence')   || '25'),
-    contrast:    parseInt(localStorage.getItem('s-contrast')     || '40'),
-    scale:       parseFloat(localStorage.getItem('s-scale')      || '2'),
-    cropTop:     parseFloat(localStorage.getItem('s-crop-top')   || '20') / 100,
-    cropHeight:  parseFloat(localStorage.getItem('s-crop-height')|| '60') / 100,
+  return {
+    email:      localStorage.getItem('s-email')        || 'europartfraget@gmail.com',
+    torch:      localStorage.getItem('s-torch')        !== 'false',
+    torchDelay: parseInt(localStorage.getItem('s-torch-delay')   || '150'),
+    confidence: parseInt(localStorage.getItem('s-confidence')    || '25'),
+    contrast:   parseInt(localStorage.getItem('s-contrast')      || '40'),
+    scale:      parseFloat(localStorage.getItem('s-scale')       || '2'),
+    cropTop:    parseFloat(localStorage.getItem('s-crop-top')    || '20') / 100,
+    cropHeight: parseFloat(localStorage.getItem('s-crop-height') || '60') / 100,
   };
-  return d;
 }
 let cfg = loadSettings();
 
@@ -361,19 +355,24 @@ function openSettings() {
   document.getElementById('s-crop-height').value = Math.round(cfg.cropHeight * 100);
   document.getElementById('settings-modal').classList.add('active');
 }
-
 function saveSettings() {
-  const keys = ['email','torch','torch-delay','confidence','contrast','scale','crop-top','crop-height'];
-  keys.forEach(k => {
+  ['email','torch','torch-delay','confidence','contrast','scale','crop-top','crop-height'].forEach(k => {
     const el = document.getElementById('s-' + k);
     localStorage.setItem('s-' + k, el.type === 'checkbox' ? el.checked : el.value);
   });
   cfg = loadSettings();
+  updateCropOutline();
   closeSettings();
 }
-
 function closeSettings() {
   document.getElementById('settings-modal').classList.remove('active');
+}
+
+// ── Crop outline ───────────────────────────────────────────
+function updateCropOutline() {
+  const el = document.getElementById('crop-outline');
+  el.style.top    = (cfg.cropTop * 100) + '%';
+  el.style.height = (cfg.cropHeight * 100) + '%';
 }
 
 // ── Tesseract worker ───────────────────────────────────────
@@ -381,7 +380,7 @@ async function initWorker() {
   worker = await Tesseract.createWorker('eng', 1, { logger: () => {} });
   await worker.setParameters({
     tessedit_pageseg_mode: '6',
-    tessedit_char_whitelist: '0123456789,/abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ -'
+    tessedit_char_whitelist: '0123456789 '
   });
 }
 initWorker();
@@ -391,33 +390,27 @@ function beep(freq, dur) {
   const ctx  = new AudioContext();
   const osc  = ctx.createOscillator();
   const gain = ctx.createGain();
-  osc.connect(gain);
-  gain.connect(ctx.destination);
+  osc.connect(gain); gain.connect(ctx.destination);
   osc.frequency.value = freq;
   gain.gain.setValueAtTime(0.3, ctx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-  osc.start();
-  osc.stop(ctx.currentTime + dur);
+  osc.start(); osc.stop(ctx.currentTime + dur);
 }
 const playBip   = () => beep(880, 0.12);
 const playError = () => beep(220, 0.45);
 
 // ── Navigation ─────────────────────────────────────────────
 function goToScan() {
-  show('scan-screen');
-  hide('main-screen');
+  show('scan-screen'); hide('main-screen');
   startCamera();
 }
-
 function goToMain() {
-  setTorch(false);
-  stopCamera();
+  setTorch(false); stopCamera();
+  dismissPreview(); closeManual();
   document.getElementById('scan-result').classList.remove('visible');
-  hide('scan-screen');
-  show('main-screen');
+  hide('scan-screen'); show('main-screen');
   renderOrderList();
 }
-
 function show(id) { document.getElementById(id).classList.add('active'); }
 function hide(id) { document.getElementById(id).classList.remove('active'); }
 
@@ -428,15 +421,12 @@ async function startCamera() {
       video: { facingMode: 'environment', width: { ideal: 1920 } }
     });
     document.getElementById('video').srcObject = stream;
-  } catch (e) {
-    alert('Kamera ikke tilgængeligt: ' + e.message);
-  }
+    updateCropOutline();
+  } catch (e) { alert('Kamera ikke tilgængeligt: ' + e.message); }
 }
-
 function stopCamera() {
   if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
 }
-
 async function setTorch(on) {
   if (!stream) return;
   const track = stream.getVideoTracks()[0];
@@ -453,14 +443,8 @@ function preprocessFrame(video) {
   const dstW  = Math.floor(srcW  * cfg.scale);
   const dstH  = Math.floor(cropH * cfg.scale);
 
-  const canvas = typeof OffscreenCanvas !== 'undefined'
-    ? new OffscreenCanvas(dstW, dstH)
-    : document.getElementById('canvas');
-
-  if (!(canvas instanceof OffscreenCanvas)) {
-    canvas.width = dstW; canvas.height = dstH;
-  }
-
+  const canvas = document.getElementById('canvas');
+  canvas.width = dstW; canvas.height = dstH;
   const ctx = canvas.getContext('2d');
   ctx.drawImage(video, 0, cropY, srcW, cropH, 0, 0, dstW, dstH);
 
@@ -473,14 +457,32 @@ function preprocessFrame(video) {
     d[i] = d[i+1] = d[i+2] = c;
   }
   ctx.putImageData(imgData, 0, 0);
-  return canvas;
+  return { canvas, dataUrl: canvas.toDataURL('image/jpeg', 0.85) };
+}
+
+// ── Capture preview ────────────────────────────────────────
+function showPreview(dataUrl, statusText) {
+  document.getElementById('preview-img').src = dataUrl;
+  document.getElementById('preview-status').textContent = statusText;
+  document.getElementById('capture-preview').classList.add('visible');
+}
+function updatePreviewStatus(text) {
+  document.getElementById('preview-status').textContent = text;
+}
+function dismissPreview() {
+  document.getElementById('capture-preview').classList.remove('visible');
+  document.getElementById('preview-img').src = '';
 }
 
 // ── OCR ────────────────────────────────────────────────────
-async function captureAndScan() {
-  const btn        = document.getElementById('capture-btn');
-  const processing = document.getElementById('processing');
+// Udtræk alle forekomster af præcis 6 cifre
+function extractOrderNumbers(text) {
+  const matches = text.match(/\b\d{6}\b/g);
+  return matches ? [...new Set(matches)] : [];
+}
 
+async function captureAndScan() {
+  const btn = document.getElementById('capture-btn');
   btn.disabled = true;
 
   if (cfg.torch) {
@@ -488,9 +490,11 @@ async function captureAndScan() {
     await new Promise(r => setTimeout(r, cfg.torchDelay));
   }
 
-  processing.classList.add('visible');
-  const canvas = preprocessFrame(document.getElementById('video'));
+  const { canvas, dataUrl } = preprocessFrame(document.getElementById('video'));
+  lastDataUrl = dataUrl;
   if (cfg.torch) setTorch(false);
+
+  showPreview(dataUrl, 'Aflæser…');
 
   try {
     const result = worker
@@ -498,80 +502,106 @@ async function captureAndScan() {
       : await Tesseract.recognize(canvas, 'eng', {
           logger: () => {},
           tessedit_pageseg_mode: '6',
-          tessedit_char_whitelist: '0123456789,/abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ -'
+          tessedit_char_whitelist: '0123456789 '
         });
 
     const text       = result.data.text;
     const confidence = result.data.confidence;
+    const numbers    = extractOrderNumbers(text);
 
-    const orderMatch = text.match(/(\d{5,7}(?:\s*,\s*\d{5,7})*)\s*\/\s*[a-zA-Z]{1,4}/);
-    const addrMatch  = text.match(/DK-\d{4}\s+[A-Za-z]+/i);
-    const address    = addrMatch ? addrMatch[0].trim() : '';
-
-    if (orderMatch && confidence > cfg.confidence) {
-      const numbers  = orderMatch[1].split(/\s*,\s*/).map(n => n.trim());
+    if (numbers.length > 0 && confidence > cfg.confidence) {
       const existing = new Set(items.map(o => o.number));
       const lines    = numbers.map(num => {
         if (existing.has(num)) return `<div class="result-dup">${num} (allerede på liste)</div>`;
-        items.push({ id: Date.now() + Math.random(), number: num, address });
+        items.push({ id: Date.now() + Math.random(), number: num, address: '' });
         return `<div class="result-number">${num}</div>`;
       });
-      document.getElementById('result-numbers').innerHTML = lines.join('');
-      document.getElementById('scan-result').classList.add('visible');
-      playBip();
-    } else {
-      playError();
-      const manual = prompt(
-        'Kunne ikke aflæse ordrenummer (sikkerhed: ' + Math.round(confidence) + '%).\n' +
-        'Indtast ordrenummer(e), kommasepareret:'
-      );
-      if (manual && manual.trim()) {
-        const numbers  = manual.split(',').map(s => s.trim()).filter(Boolean);
-        const existing = new Set(items.map(o => o.number));
-        const lines    = numbers.map(num => {
-          if (existing.has(num)) return `<div class="result-dup">${num} (allerede på liste)</div>`;
-          items.push({ id: Date.now() + Math.random(), number: num, address: '' });
-          return `<div class="result-number">${num}</div>`;
-        });
+
+      updatePreviewStatus('✓ ' + numbers.join(', '));
+      setTimeout(() => {
+        dismissPreview();
         document.getElementById('result-numbers').innerHTML = lines.join('');
         document.getElementById('scan-result').classList.add('visible');
-      }
+        playBip();
+      }, 800);
+
+    } else {
+      dismissPreview();
+      playError();
+      openManual();
     }
+
   } catch (e) {
+    dismissPreview();
     playError();
-    alert('Fejl under aflæsning: ' + e.message);
+    openManual();
   }
 
-  processing.classList.remove('visible');
   btn.disabled = false;
+}
+
+// ── Custom numpad dialog ───────────────────────────────────
+function openManual() {
+  manualInput = '';
+  document.getElementById('manual-display').textContent = '';
+  document.getElementById('manual-bg-img').src = lastDataUrl;
+  document.getElementById('manual-dialog').classList.add('visible');
+}
+function closeManual() {
+  document.getElementById('manual-dialog').classList.remove('visible');
+  document.getElementById('manual-bg-img').src = '';
+  manualInput = '';
+}
+function npInput(char) {
+  // Komma kun tilladt hvis der allerede er 6 cifre siden sidste komma
+  if (char === ',') {
+    const parts = manualInput.split(',');
+    if (parts[parts.length - 1].length !== 6) return;
+  }
+  // Max 6 cifre pr. ordrenummer
+  if (char !== ',') {
+    const parts = manualInput.split(',');
+    if (parts[parts.length - 1].length >= 6) return;
+  }
+  manualInput += char;
+  document.getElementById('manual-display').textContent = manualInput;
+}
+function npBackspace() {
+  manualInput = manualInput.slice(0, -1);
+  document.getElementById('manual-display').textContent = manualInput;
+}
+function confirmManual() {
+  if (!manualInput.trim()) { closeManual(); return; }
+  const numbers  = manualInput.split(',').map(s => s.trim()).filter(s => s.length === 6);
+  if (numbers.length === 0) { closeManual(); return; }
+
+  const existing = new Set(items.map(o => o.number));
+  const lines    = numbers.map(num => {
+    if (existing.has(num)) return `<div class="result-dup">${num} (allerede på liste)</div>`;
+    items.push({ id: Date.now() + Math.random(), number: num, address: '' });
+    return `<div class="result-number">${num}</div>`;
+  });
+
+  closeManual();
+  document.getElementById('result-numbers').innerHTML = lines.join('');
+  document.getElementById('scan-result').classList.add('visible');
+  playBip();
 }
 
 // ── Review list ────────────────────────────────────────────
 function renderOrderList() {
   const list = document.getElementById('order-list');
-
   if (items.length === 0) {
     list.innerHTML = '<div class="empty-msg">Ingen ordrer scannet endnu</div>';
     document.getElementById('mail-btn').disabled = true;
     return;
   }
-
-  const freq = {};
-  items.forEach(o => { if (o.address) freq[o.address] = (freq[o.address] || 0) + 1; });
-  const dominant = Object.keys(freq).sort((a, b) => freq[b] - freq[a])[0] || null;
-
-  list.innerHTML = items.map(item => {
-    const mismatch = dominant && item.address && item.address !== dominant;
-    const title    = mismatch ? `title="Adresse afviger: ${item.address}"` : '';
-    return `
-      <div class="order-item">
-        <input type="text" value="${escHtml(item.number)}"
-          class="${mismatch ? 'mismatch' : ''}" ${title}
-          onchange="updateItem('${item.id}', this.value)">
-        <button class="btn-remove" onclick="removeItem('${item.id}')">✕</button>
-      </div>`;
-  }).join('');
-
+  list.innerHTML = items.map(item => `
+    <div class="order-item">
+      <input type="text" value="${escHtml(item.number)}"
+        onchange="updateItem('${item.id}', this.value)">
+      <button class="btn-remove" onclick="removeItem('${item.id}')">✕</button>
+    </div>`).join('');
   document.getElementById('mail-btn').disabled = false;
 }
 
@@ -579,12 +609,10 @@ function updateItem(id, val) {
   const item = items.find(o => o.id == id);
   if (item) item.number = val;
 }
-
 function removeItem(id) {
   items = items.filter(o => o.id != id);
   renderOrderList();
 }
-
 function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
