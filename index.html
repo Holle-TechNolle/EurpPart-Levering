@@ -8,13 +8,10 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: #111;
-      color: #fff;
+      background: #111; color: #fff;
       font-family: system-ui, sans-serif;
-      height: 100dvh;
-      overflow: hidden;
+      height: 100dvh; overflow: hidden;
     }
-
     .screen { display: none; flex-direction: column; height: 100dvh; }
     .screen.active { display: flex; }
 
@@ -35,7 +32,6 @@
       flex: 1; background: #1e1e1e; border: 1px solid #333; color: #fff;
       padding: 13px 12px; border-radius: 10px; font-size: 17px; font-variant-numeric: tabular-nums;
     }
-    .order-item input.mismatch { border-color: #c0392b; color: #ff6b6b; background: #1e0f0f; }
     .btn-remove {
       background: #2a2a2a; border: none; color: #888;
       width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; flex-shrink: 0;
@@ -50,84 +46,66 @@
     #scan-screen { position: relative; background: #000; }
     #video { width: 100%; height: 100dvh; object-fit: cover; display: block; }
 
-    /* Crop rectangle overlay */
+    /* Crop outline */
     #crop-outline {
-      position: absolute;
-      left: 0; right: 0;
-      border: 2px solid rgba(0, 220, 100, 0.8);
+      position: absolute; left: 0; right: 0;
+      border: 2px solid rgba(0,220,100,0.8);
       box-shadow: 0 0 0 9999px rgba(0,0,0,0.35);
       pointer-events: none;
     }
     #crop-outline::before, #crop-outline::after {
-      content: ''; position: absolute;
-      width: 20px; height: 20px; border-color: #00dc64; border-style: solid;
+      content: ''; position: absolute; width: 20px; height: 20px;
+      border-color: #00dc64; border-style: solid;
     }
     #crop-outline::before { top: -2px; left: -2px; border-width: 3px 0 0 3px; }
     #crop-outline::after  { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; }
 
-    /* Capture preview overlay */
+    /* Capture preview */
     #capture-preview {
       display: none; position: absolute; inset: 0;
       background: #000; z-index: 10;
-      align-items: center; justify-content: center;
+      flex-direction: column;
     }
     #capture-preview.visible { display: flex; }
-    #capture-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
-    #preview-label {
-      position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
-      background: rgba(0,0,0,0.6); padding: 6px 14px; border-radius: 20px;
-      font-size: 13px; color: #aaa; white-space: nowrap;
+    #preview-img {
+      flex: 1; width: 100%; object-fit: contain;
+      background: #000;
     }
     #preview-status {
-      position: absolute; bottom: 180px; left: 16px; right: 16px;
-      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-      border-radius: 12px; padding: 12px 16px; font-size: 15px; text-align: center;
+      padding: 14px 16px; background: rgba(0,0,0,0.85);
+      font-size: 15px; text-align: center; color: #aaa;
     }
 
-    /* Custom manual input dialog */
+    /* Manual dialog */
     #manual-dialog {
       display: none; position: absolute; inset: 0; z-index: 20;
-      flex-direction: column; align-items: stretch; justify-content: flex-end;
+      flex-direction: column;
     }
     #manual-dialog.visible { display: flex; }
-
-    #manual-bg { position: absolute; inset: 0; }
-    #manual-bg img { width: 100%; height: 100%; object-fit: contain; background: #000; }
-
+    #manual-bg {
+      flex: 1; overflow: hidden; background: #000;
+    }
+    #manual-bg img { width: 100%; height: 100%; object-fit: contain; }
     #manual-panel {
-      position: relative; z-index: 1;
-      background: rgba(0,0,0,0.75);
-      backdrop-filter: blur(6px);
+      background: rgba(0,0,0,0.82); backdrop-filter: blur(6px);
       padding: 12px 16px 0;
     }
-
     #manual-display {
       background: #1a1a1a; border: 1px solid #444; border-radius: 10px;
       padding: 14px 16px; font-size: 22px; font-variant-numeric: tabular-nums;
-      color: #fff; min-height: 52px; margin-bottom: 10px;
-      letter-spacing: 0.05em;
+      color: #fff; min-height: 52px; margin-bottom: 10px; letter-spacing: 0.05em;
     }
-    #manual-display.has-content { color: #fff; }
     #manual-display:empty::after { content: 'Indtast ordrenummer…'; color: #555; font-size: 16px; }
-
-    /* Custom numpad */
     #numpad {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-      margin-bottom: 10px;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px;
     }
     .np-btn {
       background: #2a2a2a; border: none; color: #fff;
-      padding: 16px 0; border-radius: 8px;
-      font-size: 20px; font-weight: 500; cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
+      padding: 16px 0; border-radius: 8px; font-size: 20px; font-weight: 500; cursor: pointer;
+      -webkit-tap-highlight-color: transparent; user-select: none;
     }
     .np-btn:active { background: #444; }
     .np-btn.np-special { color: #aaa; font-size: 16px; }
-    .np-btn.np-comma   { font-size: 24px; font-weight: 700; }
-
     #manual-actions {
       display: flex; gap: 8px; margin-bottom: max(12px, env(safe-area-inset-bottom));
     }
@@ -149,8 +127,7 @@
     .scan-bar {
       position: absolute; bottom: 0; left: 0; right: 0;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 20px 36px; padding-bottom: max(20px, env(safe-area-inset-bottom));
-      z-index: 5;
+      padding: 20px 36px; padding-bottom: max(20px, env(safe-area-inset-bottom)); z-index: 5;
     }
     .btn-back {
       background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.6); color: #fff;
@@ -164,7 +141,7 @@
     .btn-capture:disabled { opacity: 0.45; cursor: default; }
     .scan-spacer { width: 56px; }
 
-    /* Settings modal */
+    /* Settings */
     .modal {
       display: none; position: fixed; inset: 0;
       background: rgba(0,0,0,0.82); z-index: 200;
@@ -182,7 +159,9 @@
     }
     .modal-box label { font-size: 13px; color: #888; display: block; margin-bottom: 4px; margin-top: 10px; }
     .modal-box input[type=email],
-    .modal-box input[type=number] {
+    .modal-box input[type=number],
+    .modal-box input[type=text],
+    .modal-box input[type=password] {
       width: 100%; background: #111; border: 1px solid #333; color: #fff;
       padding: 11px 12px; border-radius: 9px; font-size: 15px;
     }
@@ -201,9 +180,26 @@
     }
     .toggle input:checked + .toggle-track::after { transform: translateX(18px); }
     .modal-hint { font-size: 11px; color: #444; margin-top: 4px; }
+    .ocr-selector {
+      display: flex; gap: 8px; margin-top: 8px;
+    }
+    .ocr-option {
+      flex: 1; padding: 12px; border: 2px solid #333; border-radius: 10px;
+      background: #111; color: #aaa; font-size: 14px; font-weight: 600;
+      cursor: pointer; text-align: center; transition: all 0.15s;
+    }
+    .ocr-option.selected { border-color: #1d4ed8; color: #fff; background: #1a2a4a; }
     .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
     .btn-save   { background: #1d4ed8; color: #fff; }
     .btn-cancel { background: #2a2a2a; color: #aaa; }
+
+    /* Engine badge on scan screen */
+    #engine-badge {
+      position: absolute; top: 12px; left: 12px;
+      background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 12px; color: #aaa; pointer-events: none; z-index: 5;
+    }
   </style>
 </head>
 <body>
@@ -227,17 +223,14 @@
 <div id="scan-screen" class="screen">
   <video id="video" autoplay playsinline muted></video>
   <canvas id="canvas"></canvas>
-
   <div id="crop-outline"></div>
+  <div id="engine-badge"></div>
 
-  <!-- Preprocesseret capture preview -->
-  <div id="capture-preview" onclick="dismissPreview()">
-    <div id="preview-label">Tryk for at lukke</div>
+  <div id="capture-preview">
     <img id="preview-img" src="" alt="">
     <div id="preview-status">Aflæser…</div>
   </div>
 
-  <!-- Custom manuel indtastning -->
   <div id="manual-dialog">
     <div id="manual-bg"><img id="manual-bg-img" src="" alt=""></div>
     <div id="manual-panel">
@@ -252,7 +245,7 @@
         <button class="np-btn" onclick="npInput('7')">7</button>
         <button class="np-btn" onclick="npInput('8')">8</button>
         <button class="np-btn" onclick="npInput('9')">9</button>
-        <button class="np-btn np-comma"   onclick="npInput(',')">،</button>
+        <button class="np-btn" onclick="npInput(',')">،</button>
         <button class="np-btn" onclick="npInput('0')">0</button>
         <button class="np-btn np-special" onclick="npBackspace()">⌫</button>
       </div>
@@ -284,6 +277,15 @@
     <label>Modtager-email</label>
     <input type="email" id="s-email" placeholder="europartfraget@gmail.com">
 
+    <div class="modal-section">OCR-motor</div>
+    <div class="ocr-selector">
+      <div class="ocr-option" id="ocr-opt-vision" onclick="selectOcr('vision')">Google Vision</div>
+      <div class="ocr-option" id="ocr-opt-tesseract" onclick="selectOcr('tesseract')">Tesseract</div>
+    </div>
+    <label style="margin-top:12px">Google Vision API-nøgle</label>
+    <input type="password" id="s-vision-key" placeholder="AIza…">
+    <div class="modal-hint">Kun nødvendig ved Google Vision. Gemmes lokalt på enheden.</div>
+
     <div class="modal-section">Kamera</div>
     <div class="setting-row">
       <label>Brug lygten ved scan</label>
@@ -291,28 +293,24 @@
     </div>
     <label>Lygteforsinkelse (ms)</label>
     <input type="number" id="s-torch-delay" min="0" max="1000" step="50">
-    <div class="modal-hint">Pause efter lyset tændes inden billedet tages. Standard: 150</div>
+    <div class="modal-hint">Pause efter lyset tændes. Standard: 150</div>
 
-    <div class="modal-section">OCR</div>
+    <div class="modal-section">OCR (Tesseract)</div>
     <label>Confidence threshold (0–100)</label>
     <input type="number" id="s-confidence" min="0" max="100" step="5">
-    <div class="modal-hint">Minimum sikkerhed før resultat accepteres. Standard: 25</div>
-
+    <div class="modal-hint">Minimum sikkerhed. Standard: 25</div>
     <label>Kontrast-boost (0–80)</label>
     <input type="number" id="s-contrast" min="0" max="80" step="5">
-    <div class="modal-hint">Højere = skarpere sort/hvid. Standard: 40</div>
-
+    <div class="modal-hint">Standard: 40</div>
     <label>Scale faktor (1–3)</label>
     <input type="number" id="s-scale" min="1" max="3" step="0.5">
-    <div class="modal-hint">Billedet forstørres inden OCR. Højere = bedre men langsommere. Standard: 2</div>
-
+    <div class="modal-hint">Standard: 2</div>
     <label>Crop fra top (%)</label>
     <input type="number" id="s-crop-top" min="0" max="60" step="5">
-    <div class="modal-hint">Andel af billedet der skæres væk øverst. Standard: 20</div>
-
+    <div class="modal-hint">Standard: 20</div>
     <label>Crop højde (%)</label>
     <input type="number" id="s-crop-height" min="20" max="100" step="5">
-    <div class="modal-hint">Andel af billedet der sendes til OCR. Standard: 60</div>
+    <div class="modal-hint">Standard: 60</div>
 
     <div class="modal-buttons">
       <button class="btn btn-save"   onclick="saveSettings()">Gem</button>
@@ -323,16 +321,18 @@
 
 <script>
 // ── State ──────────────────────────────────────────────────
-let items        = [];
-let stream       = null;
-let worker       = null;
-let manualInput  = '';
-let lastDataUrl  = '';
+let items       = [];
+let stream      = null;
+let worker      = null;
+let manualInput = '';
+let lastDataUrl = '';
 
 // ── Settings ───────────────────────────────────────────────
 function loadSettings() {
   return {
     email:      localStorage.getItem('s-email')        || 'europartfraget@gmail.com',
+    ocrEngine:  localStorage.getItem('s-ocr-engine')   || 'vision',
+    visionKey:  localStorage.getItem('s-vision-key')   || '',
     torch:      localStorage.getItem('s-torch')        !== 'false',
     torchDelay: parseInt(localStorage.getItem('s-torch-delay')   || '150'),
     confidence: parseInt(localStorage.getItem('s-confidence')    || '25'),
@@ -346,6 +346,7 @@ let cfg = loadSettings();
 
 function openSettings() {
   document.getElementById('s-email').value       = cfg.email;
+  document.getElementById('s-vision-key').value  = cfg.visionKey;
   document.getElementById('s-torch').checked     = cfg.torch;
   document.getElementById('s-torch-delay').value = cfg.torchDelay;
   document.getElementById('s-confidence').value  = cfg.confidence;
@@ -353,15 +354,28 @@ function openSettings() {
   document.getElementById('s-scale').value       = cfg.scale;
   document.getElementById('s-crop-top').value    = Math.round(cfg.cropTop * 100);
   document.getElementById('s-crop-height').value = Math.round(cfg.cropHeight * 100);
+  selectOcr(cfg.ocrEngine);
   document.getElementById('settings-modal').classList.add('active');
 }
+
+function selectOcr(engine) {
+  document.getElementById('ocr-opt-vision').classList.toggle('selected',    engine === 'vision');
+  document.getElementById('ocr-opt-tesseract').classList.toggle('selected', engine === 'tesseract');
+  localStorage.setItem('s-ocr-engine', engine);
+  cfg.ocrEngine = engine;
+}
+
 function saveSettings() {
-  ['email','torch','torch-delay','confidence','contrast','scale','crop-top','crop-height'].forEach(k => {
-    const el = document.getElementById('s-' + k);
-    localStorage.setItem('s-' + k, el.type === 'checkbox' ? el.checked : el.value);
+  localStorage.setItem('s-email',       document.getElementById('s-email').value.trim());
+  localStorage.setItem('s-vision-key',  document.getElementById('s-vision-key').value.trim());
+  const torch = document.getElementById('s-torch');
+  localStorage.setItem('s-torch',       torch.checked);
+  ['torch-delay','confidence','contrast','scale','crop-top','crop-height'].forEach(k => {
+    localStorage.setItem('s-' + k, document.getElementById('s-' + k).value);
   });
   cfg = loadSettings();
   updateCropOutline();
+  updateEngineBadge();
   closeSettings();
 }
 function closeSettings() {
@@ -373,6 +387,11 @@ function updateCropOutline() {
   const el = document.getElementById('crop-outline');
   el.style.top    = (cfg.cropTop * 100) + '%';
   el.style.height = (cfg.cropHeight * 100) + '%';
+}
+
+function updateEngineBadge() {
+  document.getElementById('engine-badge').textContent =
+    cfg.ocrEngine === 'vision' ? '🔍 Google Vision' : '🔍 Tesseract';
 }
 
 // ── Tesseract worker ───────────────────────────────────────
@@ -403,6 +422,7 @@ const playError = () => beep(220, 0.45);
 function goToScan() {
   show('scan-screen'); hide('main-screen');
   startCamera();
+  updateEngineBadge();
 }
 function goToMain() {
   setTorch(false); stopCamera();
@@ -434,7 +454,7 @@ async function setTorch(on) {
   try { await track.applyConstraints({ advanced: [{ torch: on }] }); } catch (_) {}
 }
 
-// ── Preprocessing ──────────────────────────────────────────
+// ── Preprocessing (Tesseract path) ─────────────────────────
 function preprocessFrame(video) {
   const srcW  = video.videoWidth;
   const srcH  = video.videoHeight;
@@ -460,7 +480,72 @@ function preprocessFrame(video) {
   return { canvas, dataUrl: canvas.toDataURL('image/jpeg', 0.85) };
 }
 
-// ── Capture preview ────────────────────────────────────────
+// Capture raw frame for Google Vision (ingen preprocessing — Vision klarer det selv)
+function captureRawFrame(video) {
+  const srcW  = video.videoWidth;
+  const srcH  = video.videoHeight;
+  const cropY = Math.floor(srcH * cfg.cropTop);
+  const cropH = Math.floor(srcH * cfg.cropHeight);
+
+  const canvas = document.getElementById('canvas');
+  canvas.width = srcW; canvas.height = cropH;
+  canvas.getContext('2d').drawImage(video, 0, cropY, srcW, cropH, 0, 0, srcW, cropH);
+  return canvas.toDataURL('image/jpeg', 0.9);
+}
+
+// ── OCR dispatcher ─────────────────────────────────────────
+async function runOcr(video) {
+  if (cfg.ocrEngine === 'vision') {
+    return await runGoogleVision(video);
+  } else {
+    return await runTesseract(video);
+  }
+}
+
+// Google Cloud Vision
+async function runGoogleVision(video) {
+  if (!cfg.visionKey) throw new Error('Google Vision API-nøgle mangler i indstillinger');
+
+  const dataUrl = captureRawFrame(video);
+  lastDataUrl   = dataUrl;
+  const base64  = dataUrl.split(',')[1];
+
+  const response = await fetch(
+    `https://vision.googleapis.com/v1/images:annotate?key=${cfg.visionKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [{
+          image: { content: base64 },
+          features: [{ type: 'TEXT_DETECTION' }]
+        }]
+      })
+    }
+  );
+
+  if (!response.ok) throw new Error('Vision API fejl: ' + response.status);
+
+  const data = await response.json();
+  const text = data.responses?.[0]?.fullTextAnnotation?.text || '';
+  return { text, confidence: 90 }; // Vision returnerer ikke confidence — vi sætter den fast højt
+}
+
+// Tesseract
+async function runTesseract(video) {
+  const { canvas, dataUrl } = preprocessFrame(video);
+  lastDataUrl = dataUrl;
+  const result = worker
+    ? await worker.recognize(canvas)
+    : await Tesseract.recognize(canvas, 'eng', {
+        logger: () => {},
+        tessedit_pageseg_mode: '6',
+        tessedit_char_whitelist: '0123456789 '
+      });
+  return { text: result.data.text, confidence: result.data.confidence };
+}
+
+// ── Preview ────────────────────────────────────────────────
 function showPreview(dataUrl, statusText) {
   document.getElementById('preview-img').src = dataUrl;
   document.getElementById('preview-status').textContent = statusText;
@@ -474,13 +559,13 @@ function dismissPreview() {
   document.getElementById('preview-img').src = '';
 }
 
-// ── OCR ────────────────────────────────────────────────────
-// Udtræk alle forekomster af præcis 6 cifre
+// ── Parse ordrenumre ───────────────────────────────────────
 function extractOrderNumbers(text) {
   const matches = text.match(/\b\d{6}\b/g);
   return matches ? [...new Set(matches)] : [];
 }
 
+// ── Hoved scan-flow ────────────────────────────────────────
 async function captureAndScan() {
   const btn = document.getElementById('capture-btn');
   btn.disabled = true;
@@ -490,30 +575,22 @@ async function captureAndScan() {
     await new Promise(r => setTimeout(r, cfg.torchDelay));
   }
 
-  const { canvas, dataUrl } = preprocessFrame(document.getElementById('video'));
-  lastDataUrl = dataUrl;
+  // Vis preview-billede med det samme (raw frame)
+  const video = document.getElementById('video');
+  const previewDataUrl = captureRawFrame(video);
+  showPreview(previewDataUrl, 'Aflæser…');
+
   if (cfg.torch) setTorch(false);
 
-  showPreview(dataUrl, 'Aflæser…');
-
   try {
-    const result = worker
-      ? await worker.recognize(canvas)
-      : await Tesseract.recognize(canvas, 'eng', {
-          logger: () => {},
-          tessedit_pageseg_mode: '6',
-          tessedit_char_whitelist: '0123456789 '
-        });
-
-    const text       = result.data.text;
-    const confidence = result.data.confidence;
-    const numbers    = extractOrderNumbers(text);
+    const { text, confidence } = await runOcr(video);
+    const numbers = extractOrderNumbers(text);
 
     if (numbers.length > 0 && confidence > cfg.confidence) {
       const existing = new Set(items.map(o => o.number));
       const lines    = numbers.map(num => {
         if (existing.has(num)) return `<div class="result-dup">${num} (allerede på liste)</div>`;
-        items.push({ id: Date.now() + Math.random(), number: num, address: '' });
+        items.push({ id: Date.now() + Math.random(), number: num });
         return `<div class="result-number">${num}</div>`;
       });
 
@@ -533,14 +610,16 @@ async function captureAndScan() {
 
   } catch (e) {
     dismissPreview();
+    updatePreviewStatus('Fejl: ' + e.message);
     playError();
+    setTimeout(dismissPreview, 3000);
     openManual();
   }
 
   btn.disabled = false;
 }
 
-// ── Custom numpad dialog ───────────────────────────────────
+// ── Manuel numpad ──────────────────────────────────────────
 function openManual() {
   manualInput = '';
   document.getElementById('manual-display').textContent = '';
@@ -553,13 +632,10 @@ function closeManual() {
   manualInput = '';
 }
 function npInput(char) {
-  // Komma kun tilladt hvis der allerede er 6 cifre siden sidste komma
   if (char === ',') {
     const parts = manualInput.split(',');
     if (parts[parts.length - 1].length !== 6) return;
-  }
-  // Max 6 cifre pr. ordrenummer
-  if (char !== ',') {
+  } else {
     const parts = manualInput.split(',');
     if (parts[parts.length - 1].length >= 6) return;
   }
@@ -572,13 +648,13 @@ function npBackspace() {
 }
 function confirmManual() {
   if (!manualInput.trim()) { closeManual(); return; }
-  const numbers  = manualInput.split(',').map(s => s.trim()).filter(s => s.length === 6);
+  const numbers = manualInput.split(',').map(s => s.trim()).filter(s => s.length === 6);
   if (numbers.length === 0) { closeManual(); return; }
 
   const existing = new Set(items.map(o => o.number));
   const lines    = numbers.map(num => {
     if (existing.has(num)) return `<div class="result-dup">${num} (allerede på liste)</div>`;
-    items.push({ id: Date.now() + Math.random(), number: num, address: '' });
+    items.push({ id: Date.now() + Math.random(), number: num });
     return `<div class="result-number">${num}</div>`;
   });
 
@@ -604,7 +680,6 @@ function renderOrderList() {
     </div>`).join('');
   document.getElementById('mail-btn').disabled = false;
 }
-
 function updateItem(id, val) {
   const item = items.find(o => o.id == id);
   if (item) item.number = val;
