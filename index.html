@@ -24,6 +24,8 @@ body { background: #111; color: #fff; font-family: system-ui, sans-serif; height
   text-align: left; cursor: pointer;
 }
 .order-number-btn:active { background: #262626; }
+.order-number-btn.status-red  { border-color: #c0392b; color: #ff6b6b; background: #1e0f0f; }
+.order-number-btn.status-blue { border-color: #2563eb; color: #6ca8ff; background: #0f1530; }
 .btn-remove { background: #2a2a2a; border: none; color: #888; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; flex-shrink: 0; }
 .bottom-bar { display: flex; gap: 10px; padding-top: 4px; }
 .btn { flex: 1; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; }
@@ -164,8 +166,12 @@ body { background: #111; color: #fff; font-family: system-ui, sans-serif; height
     <div class="debug-content" id="dbg-response"></div>
     <div class="debug-section">Aflæst tekst (rå)</div>
     <div class="debug-content" id="dbg-text"></div>
+    <div class="debug-section">Ordrelinje fundet</div>
+    <div class="debug-content" id="dbg-orderline"></div>
     <div class="debug-section">Fundne ordrenumre</div>
     <div class="debug-content" id="dbg-numbers"></div>
+    <div class="debug-section">Kundenummer (Til/To)</div>
+    <div class="debug-content" id="dbg-customer"></div>
     <button class="btn-debug-close" onclick="closeDebug()">Luk debug</button>
   </div>
 
@@ -273,19 +279,21 @@ body { background: #111; color: #fff; font-family: system-ui, sans-serif; height
 // ════════════════════════════════════════════════════════════
 // State
 // ════════════════════════════════════════════════════════════
-let mainItems   = [];   // [{ id, number }] — committed list shown on Main
+// mainItems: [{ id, number, customerNumber|null }]
+let mainItems   = [];
 let stream      = null;
 let lastDataUrl = '';
 let debugLog    = {};
 
 // Review screen state
-let reviewMode      = 'scan';   // 'scan' | 'single'
-let pendingItems     = [];      // working copy edited on Review screen
-let editingMainId    = null;    // set when reviewMode === 'single'
-let startIdx          = 0;      // pagination window start
-let activeIdx          = 0;     // absolute index currently being edited
-let activeBuffer       = '';    // text buffer for the active slot
-let reviewInputMode   = 'numeric'; // 'numeric' | 'alpha'
+let reviewMode        = 'scan';   // 'scan' | 'single'
+let pendingItems       = [];      // [{ id, number, customerNumber }]
+let editingMainId      = null;
+let scanCustomerNumber = null;    // customer number detected for the CURRENT scan session
+let startIdx            = 0;
+let activeIdx            = 0;
+let activeBuffer         = '';
+let reviewInputMode     = 'numeric';
 
 // ════════════════════════════════════════════════════════════
 // Settings
@@ -442,10 +450,23 @@ async function runGoogleVision(dataUrl) {
   return { text, responseInfo: statusLine + ' | tegn aflæst: ' + text.length };
 }
 
-// Ordrenumre: diskrete forekomster af 4-6 cifre, adskilt af alt ikke-ciffer
+// ── Parsing ──
+// Ordrelinjen er den linje der slutter med "/ initialer" (1-4 bogstaver, evt. mellemrum før/efter skråstreg)
+function extractOrderLine(text) {
+  const lines = text.split('\n');
+  return lines.find(l => /\/\s*[A-Za-zÆØÅæøå]{1,4}\s*$/.test(l.trim())) || '';
+}
+// Ordrenumre: diskrete 4-6-cifrede grupper, men KUN fra ordrelinjen
 function extractOrderNumbers(text) {
-  const matches = text.match(/\b\d{4,6}\b/g);
-  return matches ? [...new Set(matches)] : [];
+  const line = extractOrderLine(text);
+  if (!line) return { numbers: [], line: '' };
+  const matches = line.match(/\b\d{4,6}\b/g);
+  return { numbers: matches ? [...new Set(matches)] : [], line };
+}
+// Kundenummer: linjen "Til/To" eller "Til/Te" efterfulgt af præcis 5 cifre (programgenereret felt)
+function extractCustomerNumber(text) {
+  const m = text.match(/Til\s*\/\s*T[oe]\s+(\d{5})/i);
+  return m ? m[1] : null;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -499,9 +520,14 @@ async function captureAndScan() {
 
   debugLog.response = responseInfo;
   debugLog.text = text.trim().substring(0, 500);
-  const numbers = extractOrderNumbers(text);
-  debugLog.numbers = numbers.length ? numbers.join(', ') : null;
-  debugLog.failed = failed;
+
+  const { numbers, line } = extractOrderNumbers(text);
+  const customerNumber = extractCustomerNumber(text);
+
+  debugLog.orderline = line || null;
+  debugLog.numbers   = numbers.length ? numbers.join(', ') : null;
+  debugLog.customer  = customerNumber;
+  debugLog.failed    = failed;
 
   setScanStatus('');
   if (!failed) playBip();
@@ -510,7 +536,7 @@ async function captureAndScan() {
   if (cfg.debug) {
     showDebug(debugLog);
   } else {
-    openReviewFromScan(frame.dataUrl, numbers);
+    openReviewFromScan(frame.dataUrl, numbers, customerNumber);
   }
 }
 
@@ -523,17 +549,19 @@ function showDebug(log) {
     el.textContent = text;
     el.className = 'debug-content' + (cls ? ' ' + cls : '');
   };
-  set('dbg-image',    log.image    || '—');
-  set('dbg-response', log.response || '—', log.responseOk ? 'ok' : 'err');
-  set('dbg-text',     log.text     || '(tom)', log.text ? '' : 'err');
-  set('dbg-numbers',  log.numbers  || '(ingen fundet)', log.numbers ? 'ok' : 'err');
+  set('dbg-image',     log.image     || '—');
+  set('dbg-response',  log.response  || '—', log.responseOk ? 'ok' : 'err');
+  set('dbg-text',      log.text      || '(tom)', log.text ? '' : 'err');
+  set('dbg-orderline', log.orderline || '(ingen linje matcher "/ initialer")', log.orderline ? 'ok' : 'err');
+  set('dbg-numbers',   log.numbers   || '(ingen fundet)', log.numbers ? 'ok' : 'err');
+  set('dbg-customer',  log.customer  || '(ikke aflæst)', log.customer ? 'ok' : 'err');
   document.getElementById('debug-overlay').classList.add('visible');
 }
 function closeDebug() {
   document.getElementById('debug-overlay').classList.remove('visible');
   if (debugLog && debugLog.image) {
     const numbers = debugLog.numbers ? debugLog.numbers.split(', ') : [];
-    openReviewFromScan(lastDataUrl, numbers);
+    openReviewFromScan(lastDataUrl, numbers, debugLog.customer || null);
     debugLog = {};
   }
 }
@@ -564,10 +592,11 @@ function applyReviewLayout() {
   document.getElementById('review-slots').style.fontSize = cfg.reviewFontSize + 'px';
 }
 
-function openReviewFromScan(dataUrl, numbers) {
+function openReviewFromScan(dataUrl, numbers, customerNumber) {
   reviewMode = 'scan';
   editingMainId = null;
-  pendingItems = numbers.map(n => ({ id: genId(), number: n }));
+  scanCustomerNumber = customerNumber;
+  pendingItems = numbers.map(n => ({ id: genId(), number: n, customerNumber }));
   startIdx = 0;
   activeIdx = pendingItems.length; // point at the "add new" slot
   activeBuffer = '';
@@ -591,7 +620,7 @@ function openReviewFromMain(id) {
 
   reviewMode = 'single';
   editingMainId = id;
-  pendingItems = [{ id: item.id, number: item.number }];
+  pendingItems = [{ id: item.id, number: item.number, customerNumber: item.customerNumber }];
   startIdx = 0;
   activeIdx = 0;
   activeBuffer = item.number;
@@ -610,7 +639,7 @@ function openReviewFromMain(id) {
 
 // ── Virtual list helpers ──
 function virtualLength() {
-  return pendingItems.length + (reviewMode === 'scan' ? 1 : 0); // scan mode always has a trailing "add" slot
+  return pendingItems.length + (reviewMode === 'scan' ? 1 : 0);
 }
 function maxStartIdx() {
   return Math.max(0, virtualLength() - cfg.reviewSlots);
@@ -681,14 +710,13 @@ function commitActiveBuffer() {
   const val = activeBuffer.trim();
   if (activeIdx < pendingItems.length) {
     if (val) pendingItems[activeIdx].number = val;
-    else { pendingItems.splice(activeIdx, 1); } // cleared to empty -> remove
+    else pendingItems.splice(activeIdx, 1);
   } else if (reviewMode === 'scan' && val) {
-    pendingItems.push({ id: genId(), number: val });
+    pendingItems.push({ id: genId(), number: val, customerNumber: scanCustomerNumber });
   }
 }
 
 function updateActiveSlotDisplay() {
-  // Find the visible row matching activeIdx and update its input value directly (avoids full re-render flicker)
   const rows = document.querySelectorAll('#review-slots .review-slot');
   const i = activeIdx - startIdx;
   if (i >= 0 && i < rows.length) {
@@ -744,11 +772,10 @@ function closeReview(action) {
 
   if (reviewMode === 'single') {
     if (pendingItems.length === 0) {
-      // Item was cleared/deleted -> remove from main list
       mainItems = mainItems.filter(o => o.id !== editingMainId);
     } else {
       const mi = mainItems.find(o => o.id === editingMainId);
-      if (mi) mi.number = pendingItems[0].number;
+      if (mi) mi.number = pendingItems[0].number; // customerNumber for single-edit stays as originally stored
     }
     goToMain();
     return;
@@ -758,7 +785,7 @@ function closeReview(action) {
   const existingNumbers = new Set(mainItems.map(o => o.number));
   pendingItems.forEach(p => {
     if (p.number && !existingNumbers.has(p.number)) {
-      mainItems.push({ id: genId(), number: p.number });
+      mainItems.push({ id: genId(), number: p.number, customerNumber: p.customerNumber });
       existingNumbers.add(p.number);
     }
   });
@@ -767,7 +794,6 @@ function closeReview(action) {
     goToMain();
   } else {
     show('scan-screen'); hide('review-screen');
-    // Camera stream still running from before — no need to restart
   }
 }
 
@@ -776,8 +802,28 @@ function escHtml(s) {
 }
 
 // ════════════════════════════════════════════════════════════
-// Main list
+// Main list — kundenummer-baseret statusmarkering
 // ════════════════════════════════════════════════════════════
+// Returnerer et map id -> 'normal' | 'red' | 'blue'
+function computeItemStatuses() {
+  const counts = {};
+  mainItems.forEach(it => {
+    if (it.customerNumber) counts[it.customerNumber] = (counts[it.customerNumber] || 0) + 1;
+  });
+  const countValues = Object.values(counts);
+  const maxCount = countValues.length ? Math.max(...countValues) : 0;
+  const topGroups = Object.keys(counts).filter(k => counts[k] === maxCount);
+  const dominant  = topGroups.length === 1 ? topGroups[0] : null;
+
+  const statuses = {};
+  mainItems.forEach(it => {
+    if (!it.customerNumber) { statuses[it.id] = 'blue'; return; }
+    if (dominant === null)  { statuses[it.id] = 'red';  return; } // intet klart flertal -> alle involverede røde
+    statuses[it.id] = it.customerNumber === dominant ? 'normal' : 'red';
+  });
+  return statuses;
+}
+
 function renderMainList() {
   const list = document.getElementById('order-list');
   if (!mainItems.length) {
@@ -785,11 +831,16 @@ function renderMainList() {
     document.getElementById('mail-btn').disabled = true;
     return;
   }
-  list.innerHTML = mainItems.map(item => `
+  const statuses = computeItemStatuses();
+  list.innerHTML = mainItems.map(item => {
+    const status = statuses[item.id];
+    const statusClass = status === 'red' ? 'status-red' : status === 'blue' ? 'status-blue' : '';
+    return `
     <div class="order-item">
-      <button class="order-number-btn" onclick="openReviewFromMain('${item.id}')">${escHtml(item.number)}</button>
+      <button class="order-number-btn ${statusClass}" onclick="openReviewFromMain('${item.id}')">${escHtml(item.number)}</button>
       <button class="btn-remove" onclick="removeMainItem('${item.id}')">✕</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   document.getElementById('mail-btn').disabled = false;
 }
 function removeMainItem(id) {
