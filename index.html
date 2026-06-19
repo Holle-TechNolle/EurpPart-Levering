@@ -1,124 +1,139 @@
 <!DOCTYPE html>
 <html lang="da">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Europart Levering</title>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #111; color: #fff; font-family: system-ui, sans-serif; height: 100dvh; overflow: hidden; }
-    .screen { display: none; flex-direction: column; height: 100dvh; }
-    .screen.active { display: flex; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Europart Levering</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #111; color: #fff; font-family: system-ui, sans-serif; height: 100dvh; overflow: hidden; }
+.screen { display: none; flex-direction: column; height: 100dvh; }
+.screen.active { display: flex; }
 
-    /* ── Main / Review ── */
-    #main-screen { padding: 16px; gap: 12px; }
-    .screen-header { display: flex; justify-content: space-between; align-items: center; }
-    .screen-title { font-size: 20px; font-weight: 600; color: #e0e0e0; }
-    .btn-settings { background: #2a2a2a; border: none; color: #aaa; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; }
-    .order-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 2px; }
-    .empty-msg { color: #555; text-align: center; margin-top: 60px; font-size: 15px; }
-    .order-item { display: flex; align-items: center; gap: 8px; }
-    .order-item input {
-      flex: 1; background: #1e1e1e; border: 1px solid #333; color: #fff;
-      padding: 13px 12px; border-radius: 10px; font-size: 17px; font-variant-numeric: tabular-nums;
-    }
-    .order-item input.address-mismatch { border-color: #c0392b; color: #ff6b6b; background: #1e0f0f; }
-    .btn-remove { background: #2a2a2a; border: none; color: #888; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; flex-shrink: 0; }
-    .bottom-bar { display: flex; gap: 10px; padding-top: 4px; }
-    .btn { flex: 1; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; }
-    .btn-scan { background: #1d4ed8; color: #fff; }
-    .btn-mail { background: #15803d; color: #fff; }
-    .btn-mail:disabled { background: #2a2a2a; color: #555; cursor: default; }
+/* ── Main ── */
+#main-screen { padding: 16px; gap: 12px; }
+.screen-header { display: flex; justify-content: space-between; align-items: center; }
+.screen-title { font-size: 20px; font-weight: 600; color: #e0e0e0; }
+.btn-settings { background: #2a2a2a; border: none; color: #aaa; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; }
+.order-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 2px; }
+.empty-msg { color: #555; text-align: center; margin-top: 60px; font-size: 15px; }
+.order-item { display: flex; align-items: center; gap: 8px; }
+.order-number-btn {
+  flex: 1; background: #1e1e1e; border: 1px solid #333; color: #fff;
+  padding: 13px 12px; border-radius: 10px; font-size: 17px; font-variant-numeric: tabular-nums;
+  text-align: left; cursor: pointer;
+}
+.order-number-btn:active { background: #262626; }
+.btn-remove { background: #2a2a2a; border: none; color: #888; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; flex-shrink: 0; }
+.bottom-bar { display: flex; gap: 10px; padding-top: 4px; }
+.btn { flex: 1; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; }
+.btn-scan { background: #1d4ed8; color: #fff; }
+.btn-mail { background: #15803d; color: #fff; }
+.btn-mail:disabled { background: #2a2a2a; color: #555; cursor: default; }
 
-    /* ── Scan screen ── */
-    #scan-screen { position: relative; background: #000; }
-    #video { width: 100%; height: 100dvh; object-fit: cover; display: block; }
-    #crop-outline {
-      position: absolute; left: 0; right: 0;
-      border: 2px solid rgba(0,220,100,0.8);
-      box-shadow: 0 0 0 9999px rgba(0,0,0,0.35);
-      pointer-events: none;
-    }
-    #crop-outline::before, #crop-outline::after { content: ''; position: absolute; width: 20px; height: 20px; border-color: #00dc64; border-style: solid; }
-    #crop-outline::before { top: -2px; left: -2px; border-width: 3px 0 0 3px; }
-    #crop-outline::after  { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; }
-    #engine-badge { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); padding: 4px 10px; border-radius: 20px; font-size: 12px; color: #aaa; pointer-events: none; z-index: 5; }
+/* ── Scan ── */
+#scan-screen { position: relative; background: #000; }
+#video { width: 100%; height: 100dvh; object-fit: cover; display: block; }
+#crop-outline {
+  position: absolute; left: 0; right: 0;
+  border: 2px solid rgba(0,220,100,0.8);
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.35);
+  pointer-events: none;
+}
+#crop-outline::before, #crop-outline::after { content: ''; position: absolute; width: 20px; height: 20px; border-color: #00dc64; border-style: solid; }
+#crop-outline::before { top: -2px; left: -2px; border-width: 3px 0 0 3px; }
+#crop-outline::after  { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; }
+#engine-badge { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); padding: 4px 10px; border-radius: 20px; font-size: 12px; color: #aaa; pointer-events: none; z-index: 5; }
+#scan-status {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.7); padding: 6px 16px; border-radius: 20px;
+  font-size: 13px; color: #facc15; display: none; z-index: 5;
+}
+#scan-status.visible { display: block; }
 
-    /* ── Capture preview ── */
-    #capture-preview { display: none; position: absolute; inset: 0; background: #000; z-index: 10; flex-direction: column; }
-    #capture-preview.visible { display: flex; }
-    #preview-img { flex: 1; width: 100%; object-fit: contain; background: #000; }
-    #preview-status { padding: 14px 16px; background: rgba(0,0,0,0.85); font-size: 14px; text-align: center; color: #aaa; min-height: 50px; }
+.scan-bar { position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; padding: 20px 36px; padding-bottom: max(20px, env(safe-area-inset-bottom)); z-index: 5; }
+.btn-back { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.6); color: #fff; width: 56px; height: 56px; border-radius: 50%; font-size: 22px; cursor: pointer; }
+.btn-capture { background: #fff; border: 5px solid #888; color: #111; width: 76px; height: 76px; border-radius: 50%; font-size: 13px; font-weight: 700; cursor: pointer; }
+.btn-capture:disabled { opacity: 0.45; cursor: default; }
+.scan-spacer { width: 56px; }
 
-    /* ── Debug overlay ── */
-    #debug-overlay { display: none; position: absolute; inset: 0; z-index: 30; background: rgba(0,0,0,0.93); flex-direction: column; padding: 20px; gap: 10px; overflow-y: auto; }
-    #debug-overlay.visible { display: flex; }
-    .debug-title { font-size: 16px; font-weight: 700; color: #facc15; }
-    .debug-section { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px; }
-    .debug-content { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 10px; font-size: 13px; color: #ccc; font-family: monospace; white-space: pre-wrap; word-break: break-all; max-height: 180px; overflow-y: auto; }
-    .debug-content.ok  { border-color: #15803d; color: #4ade80; }
-    .debug-content.err { border-color: #c0392b; color: #ff6b6b; }
-    .btn-debug-close { background: #1d4ed8; border: none; color: #fff; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: auto; flex-shrink: 0; }
+/* ── Debug overlay ── */
+#debug-overlay { display: none; position: absolute; inset: 0; z-index: 30; background: rgba(0,0,0,0.94); flex-direction: column; padding: 20px; gap: 10px; overflow-y: auto; }
+#debug-overlay.visible { display: flex; }
+.debug-title { font-size: 16px; font-weight: 700; color: #facc15; }
+.debug-section { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px; }
+.debug-content { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 10px; font-size: 13px; color: #ccc; font-family: monospace; white-space: pre-wrap; word-break: break-all; max-height: 160px; overflow-y: auto; }
+.debug-content.ok  { border-color: #15803d; color: #4ade80; }
+.debug-content.err { border-color: #c0392b; color: #ff6b6b; }
+.btn-debug-close { background: #1d4ed8; border: none; color: #fff; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: auto; }
 
-    /* ── Manual entry dialog ── */
-    #manual-dialog { display: none; position: absolute; inset: 0; z-index: 20; flex-direction: column; }
-    #manual-dialog.visible { display: flex; }
-    #manual-capture-bg { flex: 1; overflow: hidden; background: #000; }
-    #manual-capture-bg img { width: 100%; height: 100%; object-fit: contain; }
-    #manual-panel { background: rgba(0,0,0,0.82); backdrop-filter: blur(6px); padding: 12px 16px 0; }
-    #manual-display { background: #1a1a1a; border: 1px solid #444; border-radius: 10px; padding: 14px 16px; font-size: 22px; font-variant-numeric: tabular-nums; color: #fff; min-height: 52px; margin-bottom: 10px; letter-spacing: 0.05em; }
-    #manual-display:empty::after { content: 'Enter order number…'; color: #555; font-size: 16px; }
-    #numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
-    .np-btn { background: #2a2a2a; border: none; color: #fff; padding: 16px 0; border-radius: 8px; font-size: 20px; font-weight: 500; cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; }
-    .np-btn:active { background: #444; }
-    .np-btn.np-special { color: #aaa; font-size: 16px; }
-    #manual-actions { display: flex; gap: 8px; margin-bottom: max(12px, env(safe-area-inset-bottom)); }
-    .btn-manual-ok     { background: #15803d; color: #fff; }
-    .btn-manual-cancel { background: #2a2a2a; color: #aaa; }
+/* ── Review screen ── */
+#review-screen { position: relative; background: #000; }
+#review-capture-wrap { flex: 0 0 auto; background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+#review-capture-wrap img { width: 100%; height: 100%; object-fit: contain; }
+#review-capture-wrap.empty { background: #000; }
 
-    canvas { display: none; }
+#review-list-wrap { flex: 0 0 auto; display: flex; gap: 6px; padding: 8px 12px; background: #0a0a0a; border-top: 1px solid #222; border-bottom: 1px solid #222; }
+#review-arrows { display: flex; flex-direction: column; justify-content: space-between; width: 36px; flex-shrink: 0; }
+.arrow-btn { background: #1e1e1e; border: 1px solid #333; color: #666; border-radius: 8px; font-size: 16px; cursor: pointer; flex: 1; }
+.arrow-btn.active { color: #4ade80; border-color: #2a5a3a; background: #122016; }
+.arrow-btn:disabled { cursor: default; }
+#review-slots { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.review-slot { flex: 1; display: flex; align-items: center; gap: 6px; }
+.review-slot.empty-slot { visibility: hidden; }
+.review-slot input {
+  flex: 1; height: 100%; background: #1a1a1a; border: 1px solid #333; color: #fff;
+  border-radius: 8px; padding: 0 10px; font-variant-numeric: tabular-nums;
+}
+.review-slot.active-slot input { border-color: #1d4ed8; background: #131c33; }
+.review-slot .btn-remove { width: 32px; height: 32px; font-size: 14px; flex-shrink: 0; }
+.review-slot.is-add input { color: #888; }
 
-    #scan-result { position: absolute; bottom: 120px; left: 16px; right: 16px; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); border-radius: 12px; padding: 12px 16px; display: none; }
-    #scan-result.visible { display: block; }
-    .result-label  { font-size: 11px; color: #aaa; margin-bottom: 4px; letter-spacing: 0.05em; text-transform: uppercase; }
-    .result-number { font-size: 22px; font-weight: 700; color: #4ade80; line-height: 1.3; }
-    .result-dup    { font-size: 22px; font-weight: 700; color: #888;    line-height: 1.3; }
+#review-input-wrap { flex: 1 1 auto; display: flex; flex-direction: column; padding: 8px 12px; min-height: 0; }
+#review-mode-toggle-row { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+.btn-mode-toggle { background: #2a2a2a; border: 1px solid #444; color: #aaa; font-size: 12px; padding: 5px 12px; border-radius: 14px; cursor: pointer; }
+#numpad { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; min-height: 0; }
+.np-btn { background: #2a2a2a; border: none; color: #fff; border-radius: 8px; font-size: 20px; font-weight: 500; cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; }
+.np-btn:active { background: #444; }
+.np-btn.np-inert { color: #3a3a3a; cursor: default; }
+.np-btn.np-special { color: #aaa; font-size: 16px; }
+#alpha-input-wrap { display: none; flex: 1; }
+#alpha-input-wrap.visible { display: flex; }
+#alpha-input {
+  flex: 1; background: #1a1a1a; border: 1px solid #444; color: #fff;
+  border-radius: 10px; padding: 0 14px; font-size: 20px;
+}
+#numpad.hidden-mode { display: none; }
 
-    .scan-bar { position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; padding: 20px 36px; padding-bottom: max(20px, env(safe-area-inset-bottom)); z-index: 5; }
-    .btn-back { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.6); color: #fff; width: 56px; height: 56px; border-radius: 50%; font-size: 22px; cursor: pointer; }
-    .btn-capture { background: #fff; border: 5px solid #888; color: #111; width: 76px; height: 76px; border-radius: 50%; font-size: 13px; font-weight: 700; cursor: pointer; }
-    .btn-capture:disabled { opacity: 0.45; cursor: default; }
-    .scan-spacer { width: 56px; }
+#review-bottom-bar { flex: 0 0 auto; display: flex; gap: 10px; padding: 0 16px; padding-bottom: max(12px, env(safe-area-inset-bottom)); align-items: stretch; }
+#review-bottom-bar .btn { height: 100%; }
+#review-bottom-bar .btn-back-x { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3); color: #fff; }
 
-    /* ── Settings modal ── */
-    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 200; align-items: center; justify-content: center; }
-    .modal.active { display: flex; }
-    .modal-box { background: #1e1e1e; border: 1px solid #333; border-radius: 18px; padding: 24px; width: 90%; max-width: 420px; max-height: 90dvh; overflow-y: auto; }
-    .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
-    .modal-section { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.08em; margin: 18px 0 10px; border-bottom: 1px solid #2a2a2a; padding-bottom: 4px; }
-    .modal-box label { font-size: 13px; color: #888; display: block; margin-bottom: 4px; margin-top: 10px; }
-    .modal-box input[type=email], .modal-box input[type=number], .modal-box input[type=text], .modal-box input[type=password] { width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 11px 12px; border-radius: 9px; font-size: 15px; }
-    .setting-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
-    .setting-row label { margin: 0; }
-    .toggle { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
-    .toggle input { opacity: 0; width: 0; height: 0; }
-    .toggle-track { position: absolute; inset: 0; background: #333; border-radius: 13px; cursor: pointer; transition: background 0.2s; }
-    .toggle input:checked + .toggle-track { background: #1d4ed8; }
-    .toggle-track::after { content: ''; position: absolute; width: 20px; height: 20px; background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; }
-    .toggle input:checked + .toggle-track::after { transform: translateX(18px); }
-    .modal-hint { font-size: 11px; color: #444; margin-top: 4px; }
-    .ocr-selector { display: flex; gap: 8px; margin-top: 8px; }
-    .ocr-option { flex: 1; padding: 12px; border: 2px solid #333; border-radius: 10px; background: #111; color: #aaa; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; }
-    .ocr-option.selected { border-color: #1d4ed8; color: #fff; background: #1a2a4a; }
-    .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
-    .btn-save { background: #1d4ed8; color: #fff; }
-    .btn-cancel { background: #2a2a2a; color: #aaa; }
-  </style>
+/* ── Settings ── */
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 200; align-items: center; justify-content: center; }
+.modal.active { display: flex; }
+.modal-box { background: #1e1e1e; border: 1px solid #333; border-radius: 18px; padding: 24px; width: 90%; max-width: 420px; max-height: 90dvh; overflow-y: auto; }
+.modal-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+.modal-section { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.08em; margin: 18px 0 10px; border-bottom: 1px solid #2a2a2a; padding-bottom: 4px; }
+.modal-box label { font-size: 13px; color: #888; display: block; margin-bottom: 4px; margin-top: 10px; }
+.modal-box input[type=email], .modal-box input[type=number], .modal-box input[type=text], .modal-box input[type=password] { width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 11px 12px; border-radius: 9px; font-size: 15px; }
+.setting-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+.setting-row label { margin: 0; }
+.toggle { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-track { position: absolute; inset: 0; background: #333; border-radius: 13px; cursor: pointer; transition: background 0.2s; }
+.toggle input:checked + .toggle-track { background: #1d4ed8; }
+.toggle-track::after { content: ''; position: absolute; width: 20px; height: 20px; background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; }
+.toggle input:checked + .toggle-track::after { transform: translateX(18px); }
+.modal-hint { font-size: 11px; color: #444; margin-top: 4px; }
+.modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+.btn-save { background: #1d4ed8; color: #fff; }
+.btn-cancel { background: #2a2a2a; color: #aaa; }
+</style>
 </head>
 <body>
 
-<!-- ── Main / Review ── -->
+<!-- ════════ Main ════════ -->
 <div id="main-screen" class="screen active">
   <div class="screen-header">
     <div class="screen-title">Leverancer</div>
@@ -133,63 +148,25 @@
   </div>
 </div>
 
-<!-- ── Scan screen ── -->
+<!-- ════════ Scan ════════ -->
 <div id="scan-screen" class="screen">
   <video id="video" autoplay playsinline muted></video>
-  <canvas id="canvas"></canvas>
+  <canvas id="canvas" style="display:none"></canvas>
   <div id="crop-outline"></div>
-  <div id="engine-badge"></div>
-
-  <div id="capture-preview">
-    <img id="preview-img" src="" alt="">
-    <div id="preview-status"></div>
-  </div>
+  <div id="engine-badge">🔍 Google Vision</div>
+  <div id="scan-status"></div>
 
   <div id="debug-overlay">
-    <div class="debug-title">🔍 Debug report</div>
-    <div class="debug-section">Engine</div>
-    <div class="debug-content" id="dbg-engine"></div>
-    <div class="debug-section">Image info</div>
+    <div class="debug-title">🔍 Debug-rapport</div>
+    <div class="debug-section">Billedinfo</div>
     <div class="debug-content" id="dbg-image"></div>
-    <div class="debug-section">API / OCR response</div>
+    <div class="debug-section">API-svar</div>
     <div class="debug-content" id="dbg-response"></div>
-    <div class="debug-section">Raw OCR text</div>
+    <div class="debug-section">Aflæst tekst (rå)</div>
     <div class="debug-content" id="dbg-text"></div>
-    <div class="debug-section">Order numbers found</div>
+    <div class="debug-section">Fundne ordrenumre</div>
     <div class="debug-content" id="dbg-numbers"></div>
-    <div class="debug-section">Destination address</div>
-    <div class="debug-content" id="dbg-address"></div>
     <button class="btn-debug-close" onclick="closeDebug()">Luk debug</button>
-  </div>
-
-  <div id="manual-dialog">
-    <div id="manual-capture-bg"><img id="manual-bg-img" src="" alt=""></div>
-    <div id="manual-panel">
-      <div id="manual-display"></div>
-      <div id="numpad">
-        <button class="np-btn" onclick="npInput('1')">1</button>
-        <button class="np-btn" onclick="npInput('2')">2</button>
-        <button class="np-btn" onclick="npInput('3')">3</button>
-        <button class="np-btn" onclick="npInput('4')">4</button>
-        <button class="np-btn" onclick="npInput('5')">5</button>
-        <button class="np-btn" onclick="npInput('6')">6</button>
-        <button class="np-btn" onclick="npInput('7')">7</button>
-        <button class="np-btn" onclick="npInput('8')">8</button>
-        <button class="np-btn" onclick="npInput('9')">9</button>
-        <button class="np-btn" onclick="npInput(',')">،</button>
-        <button class="np-btn" onclick="npInput('0')">0</button>
-        <button class="np-btn np-special" onclick="npBackspace()">⌫</button>
-      </div>
-      <div id="manual-actions">
-        <button class="btn btn-manual-cancel" onclick="closeManual()">Annuller</button>
-        <button class="btn btn-manual-ok"     onclick="confirmManual()">OK</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="scan-result">
-    <div class="result-label">Aflæst</div>
-    <div id="result-numbers"></div>
   </div>
 
   <div class="scan-bar">
@@ -199,7 +176,50 @@
   </div>
 </div>
 
-<!-- ── Settings modal ── -->
+<!-- ════════ Review ════════ -->
+<div id="review-screen" class="screen">
+  <div id="review-capture-wrap">
+    <img id="review-capture-img" src="" alt="">
+  </div>
+
+  <div id="review-list-wrap">
+    <div id="review-arrows">
+      <button class="arrow-btn" id="arrow-up"   onclick="navigateList(-1)">▲</button>
+      <button class="arrow-btn" id="arrow-down" onclick="navigateList(1)">▼</button>
+    </div>
+    <div id="review-slots"></div>
+  </div>
+
+  <div id="review-input-wrap">
+    <div id="review-mode-toggle-row">
+      <button class="btn-mode-toggle" id="mode-toggle-btn" onclick="toggleInputMode()">ABC</button>
+    </div>
+    <div id="numpad">
+      <button class="np-btn" onclick="rnpInput('1')">1</button>
+      <button class="np-btn" onclick="rnpInput('2')">2</button>
+      <button class="np-btn" onclick="rnpInput('3')">3</button>
+      <button class="np-btn" onclick="rnpInput('4')">4</button>
+      <button class="np-btn" onclick="rnpInput('5')">5</button>
+      <button class="np-btn" onclick="rnpInput('6')">6</button>
+      <button class="np-btn" onclick="rnpInput('7')">7</button>
+      <button class="np-btn" onclick="rnpInput('8')">8</button>
+      <button class="np-btn" onclick="rnpInput('9')">9</button>
+      <button class="np-btn np-inert">·</button>
+      <button class="np-btn" onclick="rnpInput('0')">0</button>
+      <button class="np-btn np-special" onclick="rnpBackspace()">⌫</button>
+    </div>
+    <div id="alpha-input-wrap">
+      <input type="text" id="alpha-input" placeholder="Indtast tekst…" oninput="onAlphaInput(this.value)">
+    </div>
+  </div>
+
+  <div id="review-bottom-bar">
+    <button class="btn btn-back-x" onclick="closeReview('x')">✕</button>
+    <button class="btn btn-scan" id="review-scan-btn" onclick="closeReview('scan')">📷 Scan</button>
+  </div>
+</div>
+
+<!-- ════════ Settings ════════ -->
 <div class="modal" id="settings-modal">
   <div class="modal-box">
     <div class="modal-title">Indstillinger</div>
@@ -208,16 +228,10 @@
     <label>Modtager-email</label>
     <input type="email" id="s-email" placeholder="europartfraget@gmail.com">
 
-    <div class="modal-section">OCR engine</div>
-    <div class="ocr-selector">
-      <div class="ocr-option" id="ocr-opt-vision"    onclick="selectOcrEngine('vision')">Google Vision</div>
-      <div class="ocr-option" id="ocr-opt-tesseract" onclick="selectOcrEngine('tesseract')">Tesseract</div>
-    </div>
-    <label style="margin-top:12px">Google Vision API key</label>
+    <div class="modal-section">OCR</div>
+    <label>Google Vision API-nøgle</label>
     <input type="password" id="s-vision-key" placeholder="AIza…">
     <div class="modal-hint">Gemmes lokalt på enheden.</div>
-
-    <div class="modal-section">Debug</div>
     <div class="setting-row">
       <label>Vis debug-rapport efter scan</label>
       <label class="toggle"><input type="checkbox" id="s-debug"><div class="toggle-track"></div></label>
@@ -230,24 +244,23 @@
     </div>
     <label>Lygteforsinkelse (ms)</label>
     <input type="number" id="s-torch-delay" min="0" max="1000" step="50">
-    <div class="modal-hint">Standard: 150</div>
-
-    <div class="modal-section">OCR (Tesseract only)</div>
-    <label>Confidence threshold (0–100)</label>
-    <input type="number" id="s-confidence" min="0" max="100" step="5">
-    <div class="modal-hint">Standard: 25</div>
-    <label>Kontrast-boost (0–80)</label>
-    <input type="number" id="s-contrast" min="0" max="80" step="5">
-    <div class="modal-hint">Standard: 40</div>
-    <label>Scale faktor (1–3)</label>
-    <input type="number" id="s-scale" min="1" max="3" step="0.5">
-    <div class="modal-hint">Standard: 2</div>
     <label>Crop fra top (%)</label>
     <input type="number" id="s-crop-top" min="0" max="60" step="5">
-    <div class="modal-hint">Standard: 20</div>
     <label>Crop højde (%)</label>
     <input type="number" id="s-crop-height" min="20" max="100" step="5">
-    <div class="modal-hint">Standard: 60</div>
+
+    <div class="modal-section">Review-skærm layout</div>
+    <label>Capture-billede (% af skærmhøjde)</label>
+    <input type="number" id="s-review-capture" min="0" max="70" step="5">
+    <label>Ordrenummer-liste (% af skærmhøjde)</label>
+    <input type="number" id="s-review-list" min="10" max="50" step="5">
+    <label>Antal synlige elementer i liste</label>
+    <input type="number" id="s-review-slots" min="2" step="1">
+    <label>Skriftstørrelse i liste (px)</label>
+    <input type="number" id="s-review-fontsize" min="12" max="30" step="1">
+    <label>Bundbjælke (% af skærmhøjde)</label>
+    <input type="number" id="s-review-bottombar" min="6" max="25" step="1">
+    <div class="modal-hint">Tastatur/numpad fylder resten — minimum 30% sikres altid.</div>
 
     <div class="modal-buttons">
       <button class="btn btn-save"   onclick="saveSettings()">Gem</button>
@@ -257,495 +270,541 @@
 </div>
 
 <script>
-// ── State ──────────────────────────────────────────────────
-// scannedItems: [{ id, orderNumber, destinationAddress }]
-let scannedItems   = [];
-let cameraStream   = null;
-let tesseractWorker = null;
-let manualInput    = '';
-let lastCaptureUrl = '';
-let debugReport    = {};
+// ════════════════════════════════════════════════════════════
+// State
+// ════════════════════════════════════════════════════════════
+let mainItems   = [];   // [{ id, number }] — committed list shown on Main
+let stream      = null;
+let lastDataUrl = '';
+let debugLog    = {};
 
-// ── Settings ───────────────────────────────────────────────
+// Review screen state
+let reviewMode      = 'scan';   // 'scan' | 'single'
+let pendingItems     = [];      // working copy edited on Review screen
+let editingMainId    = null;    // set when reviewMode === 'single'
+let startIdx          = 0;      // pagination window start
+let activeIdx          = 0;     // absolute index currently being edited
+let activeBuffer       = '';    // text buffer for the active slot
+let reviewInputMode   = 'numeric'; // 'numeric' | 'alpha'
+
+// ════════════════════════════════════════════════════════════
+// Settings
+// ════════════════════════════════════════════════════════════
 function loadSettings() {
   return {
-    recipientEmail:      localStorage.getItem('s-email')        || 'europartfraget@gmail.com',
-    ocrEngine:           localStorage.getItem('s-ocr-engine')   || 'vision',
-    visionApiKey:        localStorage.getItem('s-vision-key')   || '',
-    debugMode:           localStorage.getItem('s-debug')        === 'true',
-    torchEnabled:        localStorage.getItem('s-torch')        === 'true',
-    torchDelayMs:        parseInt(localStorage.getItem('s-torch-delay')   || '150'),
-    confidenceThreshold: parseInt(localStorage.getItem('s-confidence')    || '25'),
-    contrastBoost:       parseInt(localStorage.getItem('s-contrast')      || '40'),
-    scaleFactor:         parseFloat(localStorage.getItem('s-scale')       || '2'),
-    cropTopFraction:     parseFloat(localStorage.getItem('s-crop-top')    || '20') / 100,
-    cropHeightFraction:  parseFloat(localStorage.getItem('s-crop-height') || '60') / 100,
+    email:        localStorage.getItem('s-email')          || 'europartfraget@gmail.com',
+    visionKey:    localStorage.getItem('s-vision-key')      || '',
+    debug:        localStorage.getItem('s-debug')           === 'true',
+    torch:        localStorage.getItem('s-torch')           !== 'false',
+    torchDelay:   parseInt(localStorage.getItem('s-torch-delay') || '150'),
+    cropTop:      parseFloat(localStorage.getItem('s-crop-top')    || '20') / 100,
+    cropHeight:   parseFloat(localStorage.getItem('s-crop-height') || '60') / 100,
+    reviewCapturePct:   parseFloat(localStorage.getItem('s-review-capture')   || '35'),
+    reviewListPct:      parseFloat(localStorage.getItem('s-review-list')      || '25'),
+    reviewSlots:        Math.max(2, parseInt(localStorage.getItem('s-review-slots') || '3')),
+    reviewFontSize:     parseInt(localStorage.getItem('s-review-fontsize')    || '18'),
+    reviewBottomBarPct: parseFloat(localStorage.getItem('s-review-bottombar') || '12'),
   };
 }
 let cfg = loadSettings();
 
 function openSettings() {
-  document.getElementById('s-email').value       = cfg.recipientEmail;
-  document.getElementById('s-vision-key').value  = cfg.visionApiKey;
-  document.getElementById('s-debug').checked     = cfg.debugMode;
-  document.getElementById('s-torch').checked     = cfg.torchEnabled;
-  document.getElementById('s-torch-delay').value = cfg.torchDelayMs;
-  document.getElementById('s-confidence').value  = cfg.confidenceThreshold;
-  document.getElementById('s-contrast').value    = cfg.contrastBoost;
-  document.getElementById('s-scale').value       = cfg.scaleFactor;
-  document.getElementById('s-crop-top').value    = Math.round(cfg.cropTopFraction * 100);
-  document.getElementById('s-crop-height').value = Math.round(cfg.cropHeightFraction * 100);
-  selectOcrEngine(cfg.ocrEngine);
+  document.getElementById('s-email').value           = cfg.email;
+  document.getElementById('s-vision-key').value       = cfg.visionKey;
+  document.getElementById('s-debug').checked          = cfg.debug;
+  document.getElementById('s-torch').checked          = cfg.torch;
+  document.getElementById('s-torch-delay').value      = cfg.torchDelay;
+  document.getElementById('s-crop-top').value         = Math.round(cfg.cropTop * 100);
+  document.getElementById('s-crop-height').value      = Math.round(cfg.cropHeight * 100);
+  document.getElementById('s-review-capture').value   = cfg.reviewCapturePct;
+  document.getElementById('s-review-list').value      = cfg.reviewListPct;
+  document.getElementById('s-review-slots').value     = cfg.reviewSlots;
+  document.getElementById('s-review-fontsize').value  = cfg.reviewFontSize;
+  document.getElementById('s-review-bottombar').value = cfg.reviewBottomBarPct;
   document.getElementById('settings-modal').classList.add('active');
 }
-function selectOcrEngine(engine) {
-  document.getElementById('ocr-opt-vision').classList.toggle('selected',    engine === 'vision');
-  document.getElementById('ocr-opt-tesseract').classList.toggle('selected', engine === 'tesseract');
-  localStorage.setItem('s-ocr-engine', engine);
-  cfg.ocrEngine = engine;
-}
 function saveSettings() {
-  localStorage.setItem('s-email',      document.getElementById('s-email').value.trim());
-  localStorage.setItem('s-vision-key', document.getElementById('s-vision-key').value.trim());
-  localStorage.setItem('s-debug',      document.getElementById('s-debug').checked);
-  localStorage.setItem('s-torch',      document.getElementById('s-torch').checked);
-  ['torch-delay','confidence','contrast','scale','crop-top','crop-height'].forEach(k => {
-    localStorage.setItem('s-' + k, document.getElementById('s-' + k).value);
-  });
+  localStorage.setItem('s-email',           document.getElementById('s-email').value.trim());
+  localStorage.setItem('s-vision-key',      document.getElementById('s-vision-key').value.trim());
+  localStorage.setItem('s-debug',           document.getElementById('s-debug').checked);
+  localStorage.setItem('s-torch',           document.getElementById('s-torch').checked);
+  ['torch-delay','crop-top','crop-height','review-capture','review-list','review-slots','review-fontsize','review-bottombar']
+    .forEach(k => localStorage.setItem('s-' + k, document.getElementById('s-' + k).value));
   cfg = loadSettings();
   updateCropOutline();
-  updateEngineBadge();
   closeSettings();
 }
-function closeSettings() {
-  document.getElementById('settings-modal').classList.remove('active');
-}
+function closeSettings() { document.getElementById('settings-modal').classList.remove('active'); }
 
-// ── UI helpers ─────────────────────────────────────────────
-function updateCropOutline() {
-  const el = document.getElementById('crop-outline');
-  el.style.top    = (cfg.cropTopFraction * 100) + '%';
-  el.style.height = (cfg.cropHeightFraction * 100) + '%';
-}
-function updateEngineBadge() {
-  document.getElementById('engine-badge').textContent =
-    cfg.ocrEngine === 'vision' ? '🔍 Google Vision' : '🔍 Tesseract';
-}
-
-// ── Debug overlay ──────────────────────────────────────────
-function showDebugOverlay(report) {
-  const set = (id, text, cls) => {
-    const el = document.getElementById(id);
-    el.textContent = text || '—';
-    el.className   = 'debug-content' + (cls ? ' ' + cls : '');
-  };
-  set('dbg-engine',   report.engine);
-  set('dbg-image',    report.imageInfo);
-  set('dbg-response', report.apiResponse, report.apiSuccess ? 'ok' : 'err');
-  set('dbg-text',     report.rawText,     report.rawText    ? ''    : 'err');
-  set('dbg-numbers',  report.numbersFound,report.numbersFound ? 'ok' : 'err');
-  set('dbg-address',  report.addressFound,report.addressFound ? 'ok' : '');
-  document.getElementById('debug-overlay').classList.add('visible');
-}
-function closeDebug() {
-  document.getElementById('debug-overlay').classList.remove('visible');
-  if (debugReport.scanFailed) openManualEntry();
-}
-
-// ── Tesseract worker ───────────────────────────────────────
-async function initialiseTesseractWorker() {
+// ════════════════════════════════════════════════════════════
+// Audio
+// ════════════════════════════════════════════════════════════
+function beep(freq, dur) {
   try {
-    tesseractWorker = await Tesseract.createWorker('eng', 1, { logger: () => {} });
-    await tesseractWorker.setParameters({
-      tessedit_pageseg_mode: '6',
-      tessedit_char_whitelist: '0123456789 '
-    });
-  } catch (e) { console.warn('Tesseract worker initialisation failed:', e); }
-}
-initialiseTesseractWorker();
-
-// ── Audio feedback ─────────────────────────────────────────
-function playTone(frequency, duration) {
-  try {
-    const ctx  = new AudioContext();
-    const osc  = ctx.createOscillator();
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain); gain.connect(ctx.destination);
-    osc.frequency.value = frequency;
+    osc.frequency.value = freq;
     gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-    osc.start(); osc.stop(ctx.currentTime + duration);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.start(); osc.stop(ctx.currentTime + dur);
   } catch (_) {}
 }
-const playSuccessBeep = () => playTone(880, 0.12);
-const playErrorBeep   = () => playTone(220, 0.45);
+const playBip   = () => beep(880, 0.12);
+const playError = () => beep(220, 0.45);
 
-// ── Navigation ─────────────────────────────────────────────
-function goToScan() {
-  showScreen('scan-screen'); hideScreen('main-screen');
-  startCamera(); updateEngineBadge();
-}
+// ════════════════════════════════════════════════════════════
+// Navigation between top-level screens
+// ════════════════════════════════════════════════════════════
+function show(id) { document.getElementById(id).classList.add('active'); }
+function hide(id) { document.getElementById(id).classList.remove('active'); }
+
 function goToMain() {
-  setTorch(false); stopCamera();
-  dismissCapturePreview(); closeManualEntry(); closeDebug();
-  document.getElementById('scan-result').classList.remove('visible');
-  hideScreen('scan-screen'); showScreen('main-screen');
-  renderReviewList();
+  setTorch(false); stopCamera(); closeDebug();
+  hide('scan-screen'); hide('review-screen'); show('main-screen');
+  renderMainList();
 }
-function showScreen(id) { document.getElementById(id).classList.add('active'); }
-function hideScreen(id) { document.getElementById(id).classList.remove('active'); }
+function goToScan() {
+  hide('main-screen'); hide('review-screen'); show('scan-screen');
+  startCamera();
+}
 
-// ── Camera ─────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+// Camera
+// ════════════════════════════════════════════════════════════
 async function startCamera() {
   try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({
+    stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: 'environment', width: { ideal: 1920 } }
     });
-    const videoEl = document.getElementById('video');
-    videoEl.srcObject = cameraStream;
+    const v = document.getElementById('video');
+    v.srcObject = stream;
     await new Promise(resolve => {
-      if (videoEl.readyState >= 2) { resolve(); return; }
-      videoEl.addEventListener('canplay', resolve, { once: true });
+      if (v.readyState >= 2) { resolve(); return; }
+      v.addEventListener('canplay', resolve, { once: true });
     });
     updateCropOutline();
   } catch (e) { alert('Kamera ikke tilgængeligt: ' + e.message); }
 }
-function stopCamera() {
-  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
-}
+function stopCamera() { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } }
 async function setTorch(on) {
-  if (!cameraStream) return;
-  const track = cameraStream.getVideoTracks()[0];
+  if (!stream) return;
+  const track = stream.getVideoTracks()[0];
   if (!track) return;
   try { await track.applyConstraints({ advanced: [{ torch: on }] }); } catch (_) {}
 }
+function updateCropOutline() {
+  const el = document.getElementById('crop-outline');
+  el.style.top    = (cfg.cropTop * 100) + '%';
+  el.style.height = (cfg.cropHeight * 100) + '%';
+}
 
-// ── Frame capture ──────────────────────────────────────────
-// Returns { canvas, dataUrl, imageInfo }
-// applyPreprocessing: grayscale + contrast boost (Tesseract path only)
-function captureFrame(videoEl, applyPreprocessing) {
-  const srcWidth  = videoEl.videoWidth;
-  const srcHeight = videoEl.videoHeight;
-
-  if (!srcWidth || !srcHeight) {
-    throw new Error('Video not ready — dimensions: ' + srcWidth + 'x' + srcHeight);
-  }
-
-  const cropOffsetY  = Math.floor(srcHeight * cfg.cropTopFraction);
-  const cropHeight   = Math.floor(srcHeight * cfg.cropHeightFraction);
-  const outputWidth  = applyPreprocessing ? Math.floor(srcWidth  * cfg.scaleFactor) : srcWidth;
-  const outputHeight = applyPreprocessing ? Math.floor(cropHeight * cfg.scaleFactor) : cropHeight;
-
+// ════════════════════════════════════════════════════════════
+// Capture
+// ════════════════════════════════════════════════════════════
+function captureRawFrame(video) {
+  const srcW = video.videoWidth, srcH = video.videoHeight;
+  if (!srcW || !srcH) throw new Error('Video ikke klar (dimensioner ' + srcW + 'x' + srcH + ')');
+  const cropY = Math.floor(srcH * cfg.cropTop);
+  const cropH = Math.floor(srcH * cfg.cropHeight);
   const canvas = document.getElementById('canvas');
-  canvas.width  = outputWidth;
-  canvas.height = outputHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(videoEl, 0, cropOffsetY, srcWidth, cropHeight, 0, 0, outputWidth, outputHeight);
-
-  if (applyPreprocessing) {
-    const imageData = ctx.getImageData(0, 0, outputWidth, outputHeight);
-    const pixels    = imageData.data;
-    const boost     = cfg.contrastBoost;
-    for (let i = 0; i < pixels.length; i += 4) {
-      const grey = 0.299 * pixels[i] + 0.587 * pixels[i+1] + 0.114 * pixels[i+2];
-      const val  = grey < 128 ? Math.max(0, grey - boost) : Math.min(255, grey + boost);
-      pixels[i] = pixels[i+1] = pixels[i+2] = val;
-    }
-    ctx.putImageData(imageData, 0, 0);
-  }
-
+  canvas.width = srcW; canvas.height = cropH;
+  canvas.getContext('2d').drawImage(video, 0, cropY, srcW, cropH, 0, 0, srcW, cropH);
   return {
-    canvas,
-    dataUrl:   canvas.toDataURL('image/jpeg', 0.9),
-    imageInfo: `Source: ${srcWidth}×${srcHeight}px | Crop: top ${Math.round(cfg.cropTopFraction*100)}%, height ${Math.round(cfg.cropHeightFraction*100)}% | Output: ${outputWidth}×${outputHeight}px`
+    dataUrl: canvas.toDataURL('image/jpeg', 0.9),
+    info: `Kilde: ${srcW}×${srcH}px | Crop: fra ${Math.round(cfg.cropTop*100)}%, højde ${Math.round(cfg.cropHeight*100)}%`
   };
 }
 
-// ── Google Cloud Vision OCR ────────────────────────────────
+// ════════════════════════════════════════════════════════════
+// Google Vision OCR
+// ════════════════════════════════════════════════════════════
 async function runGoogleVision(dataUrl) {
-  if (!cfg.visionApiKey) throw new Error('Vision API key missing — check settings');
-
-  const base64Payload = dataUrl.split(',')[1];
-  const endpoint      = `https://vision.googleapis.com/v1/images:annotate?key=${cfg.visionApiKey}`;
-
-  const response = await fetch(endpoint, {
-    method:  'POST',
+  if (!cfg.visionKey) throw new Error('Google Vision API-nøgle mangler — tjek indstillinger');
+  const base64 = dataUrl.split(',')[1];
+  const url = `https://vision.googleapis.com/v1/images:annotate?key=${cfg.visionKey}`;
+  const response = await fetch(url, {
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      requests: [{
-        image:    { content: base64Payload },
-        features: [{ type: 'TEXT_DETECTION', maxResults: 1 }]
-      }]
+      requests: [{ image: { content: base64 }, features: [{ type: 'TEXT_DETECTION', maxResults: 1 }] }]
     })
   });
-
-  const statusSummary = `HTTP ${response.status} ${response.statusText}`;
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(statusSummary + '\n' + errorBody);
+  const statusLine = `HTTP ${response.status} ${response.statusText}`;
+  if (!response.ok) throw new Error(statusLine + '\n' + await response.text());
+  const data = await response.json();
+  if (data.responses?.[0]?.error) {
+    const e = data.responses[0].error;
+    throw new Error('Vision API fejl ' + e.code + ': ' + e.message);
   }
-
-  const responseData = await response.json();
-  if (responseData.responses?.[0]?.error) {
-    const err = responseData.responses[0].error;
-    throw new Error(`Vision API error ${err.code}: ${err.message}`);
-  }
-
-  const fullText = responseData.responses?.[0]?.fullTextAnnotation?.text || '';
-  return { text: fullText, apiSummary: `${statusSummary} | characters read: ${fullText.length}` };
+  const text = data.responses?.[0]?.fullTextAnnotation?.text || '';
+  return { text, responseInfo: statusLine + ' | tegn aflæst: ' + text.length };
 }
 
-// ── Tesseract OCR ──────────────────────────────────────────
-async function runTesseract(canvas) {
-  if (!tesseractWorker) throw new Error('Tesseract worker not initialised yet');
-  const result = await tesseractWorker.recognize(canvas);
-  return {
-    text:       result.data.text,
-    confidence: result.data.confidence,
-    apiSummary: `Confidence: ${Math.round(result.data.confidence)}%`
-  };
-}
-
-// ── Parse order numbers ────────────────────────────────────
-// Order numbers are exactly 6 digits — all other content is irrelevant
+// Ordrenumre: diskrete forekomster af 4-6 cifre, adskilt af alt ikke-ciffer
 function extractOrderNumbers(text) {
-  const matches = text.match(/\b\d{6}\b/g);
+  const matches = text.match(/\b\d{4,6}\b/g);
   return matches ? [...new Set(matches)] : [];
 }
 
-// ── Parse destination address ──────────────────────────────
-// Looks for Danish postal format: "DK-XXXX CityName"
-function extractDestinationAddress(text) {
-  const match = text.match(/DK-\d{4}\s+[\wæøåÆØÅ]+/i);
-  return match ? match[0].trim() : '';
+// ════════════════════════════════════════════════════════════
+// Scan-flow
+// ════════════════════════════════════════════════════════════
+function setScanStatus(text) {
+  const el = document.getElementById('scan-status');
+  if (!text) { el.classList.remove('visible'); return; }
+  el.textContent = text;
+  el.classList.add('visible');
 }
 
-// ── Dominant address (for mismatch detection) ──────────────
-function getDominantAddress() {
-  const frequency = {};
-  scannedItems.forEach(item => {
-    if (item.destinationAddress) {
-      frequency[item.destinationAddress] = (frequency[item.destinationAddress] || 0) + 1;
-    }
-  });
-  const addresses = Object.keys(frequency);
-  if (!addresses.length) return '';
-  return addresses.sort((a, b) => frequency[b] - frequency[a])[0];
-}
-
-// ── Capture preview ────────────────────────────────────────
-function showCapturePreview(dataUrl, statusText) {
-  document.getElementById('preview-img').src = dataUrl;
-  document.getElementById('preview-status').textContent = statusText;
-  document.getElementById('capture-preview').classList.add('visible');
-}
-function updatePreviewStatus(text) {
-  document.getElementById('preview-status').textContent = text;
-}
-function dismissCapturePreview() {
-  document.getElementById('capture-preview').classList.remove('visible');
-  document.getElementById('preview-img').src = '';
-}
-
-// ── Main scan flow ─────────────────────────────────────────
 async function captureAndScan() {
-  const captureBtn = document.getElementById('capture-btn');
-  captureBtn.disabled = true;
-  debugReport = { scanFailed: false };
+  const btn = document.getElementById('capture-btn');
+  btn.disabled = true;
+  debugLog = {};
 
-  if (cfg.torchEnabled) {
+  if (cfg.torch) {
     await setTorch(true);
-    await new Promise(r => setTimeout(r, cfg.torchDelayMs));
+    await new Promise(r => setTimeout(r, cfg.torchDelay));
   }
 
-  const videoEl          = document.getElementById('video');
-  const usePreprocessing = cfg.ocrEngine === 'tesseract';
-
+  const video = document.getElementById('video');
+  let frame;
   try {
-    const frame    = captureFrame(videoEl, usePreprocessing);
-    lastCaptureUrl = frame.dataUrl;
-
-    debugReport.engine    = cfg.ocrEngine === 'vision'
-      ? 'Google Cloud Vision (TEXT_DETECTION)'
-      : 'Tesseract.js v5 (eng, PSM 6, whitelist: digits)';
-    debugReport.imageInfo = frame.imageInfo;
-
-    if (cfg.torchEnabled) setTorch(false);
-    showCapturePreview(frame.dataUrl, 'Aflæser…');
-
-    // Run selected OCR engine
-    let ocrText = '', apiSummary = '', confidence = 100;
-    if (cfg.ocrEngine === 'vision') {
-      const result = await runGoogleVision(frame.dataUrl);
-      ocrText      = result.text;
-      apiSummary   = result.apiSummary;
-    } else {
-      const result = await runTesseract(frame.canvas);
-      ocrText      = result.text;
-      confidence   = result.confidence;
-      apiSummary   = result.apiSummary;
-    }
-
-    debugReport.apiResponse  = apiSummary;
-    debugReport.apiSuccess   = true;
-    debugReport.rawText      = ocrText.trim().substring(0, 600);
-
-    const orderNumbers       = extractOrderNumbers(ocrText);
-    const destinationAddress = extractDestinationAddress(ocrText);
-    debugReport.numbersFound = orderNumbers.length ? orderNumbers.join(', ') : null;
-    debugReport.addressFound = destinationAddress || null;
-
-    const passesConfidenceCheck = cfg.ocrEngine === 'vision' || confidence > cfg.confidenceThreshold;
-
-    if (orderNumbers.length > 0 && passesConfidenceCheck) {
-      // Add new items, skip duplicates
-      const existingNumbers = new Set(scannedItems.map(i => i.orderNumber));
-      const resultLines     = orderNumbers.map(num => {
-        if (existingNumbers.has(num)) {
-          return `<div class="result-dup">${num} (allerede på liste)</div>`;
-        }
-        scannedItems.push({ id: Date.now() + Math.random(), orderNumber: num, destinationAddress });
-        return `<div class="result-number">${num}</div>`;
-      });
-
-      updatePreviewStatus('✓ ' + orderNumbers.join(', ') + (destinationAddress ? '\n' + destinationAddress : ''));
-
-      if (cfg.debugMode) {
-        debugReport.scanFailed = false;
-        setTimeout(() => { dismissCapturePreview(); showDebugOverlay(debugReport); }, 600);
-      } else {
-        setTimeout(() => {
-          dismissCapturePreview();
-          document.getElementById('result-numbers').innerHTML = resultLines.join('');
-          document.getElementById('scan-result').classList.add('visible');
-          playSuccessBeep();
-        }, 800);
-      }
-
-    } else {
-      debugReport.scanFailed = true;
-      updatePreviewStatus('Ingen ordrenumre fundet');
-      playErrorBeep();
-      if (cfg.debugMode) {
-        setTimeout(() => { dismissCapturePreview(); showDebugOverlay(debugReport); }, 600);
-      } else {
-        setTimeout(() => { dismissCapturePreview(); openManualEntry(); }, 600);
-      }
-    }
-
+    frame = captureRawFrame(video);
   } catch (e) {
-    if (cfg.torchEnabled) setTorch(false);
-    debugReport.apiResponse  = e.message;
-    debugReport.apiSuccess   = false;
-    debugReport.rawText      = '(error — no text retrieved)';
-    debugReport.scanFailed   = true;
-    playErrorBeep();
-    if (cfg.debugMode) {
-      setTimeout(() => { dismissCapturePreview(); showDebugOverlay(debugReport); }, 400);
-    } else {
-      dismissCapturePreview();
-      openManualEntry();
-    }
+    if (cfg.torch) setTorch(false);
+    alert(e.message);
+    btn.disabled = false;
+    return;
+  }
+  lastDataUrl = frame.dataUrl;
+  if (cfg.torch) setTorch(false);
+
+  debugLog.image = frame.info;
+  setScanStatus('Aflæser…');
+
+  let text = '', responseInfo = '', failed = false;
+  try {
+    const r = await runGoogleVision(frame.dataUrl);
+    text = r.text;
+    responseInfo = r.responseInfo;
+    debugLog.responseOk = true;
+  } catch (e) {
+    responseInfo = e.message;
+    debugLog.responseOk = false;
+    failed = true;
+    playError();
   }
 
-  captureBtn.disabled = false;
-}
+  debugLog.response = responseInfo;
+  debugLog.text = text.trim().substring(0, 500);
+  const numbers = extractOrderNumbers(text);
+  debugLog.numbers = numbers.length ? numbers.join(', ') : null;
+  debugLog.failed = failed;
 
-// ── Manual entry (numpad) ──────────────────────────────────
-function openManualEntry() {
-  manualInput = '';
-  document.getElementById('manual-display').textContent = '';
-  document.getElementById('manual-bg-img').src = lastCaptureUrl;
-  document.getElementById('manual-dialog').classList.add('visible');
-}
-function closeManualEntry() {
-  document.getElementById('manual-dialog').classList.remove('visible');
-  document.getElementById('manual-bg-img').src = '';
-  manualInput = '';
-}
-// Keep alias so HTML onclick attributes still work
-const closeManual = closeManualEntry;
+  setScanStatus('');
+  if (!failed) playBip();
+  btn.disabled = false;
 
-function npInput(char) {
-  const parts = manualInput.split(',');
-  if (char === ',') {
-    if (parts[parts.length - 1].length !== 6) return; // Only allow comma after exactly 6 digits
+  if (cfg.debug) {
+    showDebug(debugLog);
   } else {
-    if (parts[parts.length - 1].length >= 6) return; // Max 6 digits per order number
+    openReviewFromScan(frame.dataUrl, numbers);
   }
-  manualInput += char;
-  document.getElementById('manual-display').textContent = manualInput;
-}
-function npBackspace() {
-  manualInput = manualInput.slice(0, -1);
-  document.getElementById('manual-display').textContent = manualInput;
-}
-function confirmManual() {
-  if (!manualInput.trim()) { closeManualEntry(); return; }
-  const numbers = manualInput.split(',').map(s => s.trim()).filter(s => s.length === 6);
-  if (!numbers.length) { closeManualEntry(); return; }
-
-  const existingNumbers = new Set(scannedItems.map(i => i.orderNumber));
-  const resultLines     = numbers.map(num => {
-    if (existingNumbers.has(num)) return `<div class="result-dup">${num} (allerede på liste)</div>`;
-    scannedItems.push({ id: Date.now() + Math.random(), orderNumber: num, destinationAddress: '' });
-    return `<div class="result-number">${num}</div>`;
-  });
-
-  closeManualEntry();
-  document.getElementById('result-numbers').innerHTML = resultLines.join('');
-  document.getElementById('scan-result').classList.add('visible');
-  playSuccessBeep();
 }
 
-// ── Review list ────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+// Debug overlay
+// ════════════════════════════════════════════════════════════
+function showDebug(log) {
+  const set = (id, text, cls) => {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = 'debug-content' + (cls ? ' ' + cls : '');
+  };
+  set('dbg-image',    log.image    || '—');
+  set('dbg-response', log.response || '—', log.responseOk ? 'ok' : 'err');
+  set('dbg-text',     log.text     || '(tom)', log.text ? '' : 'err');
+  set('dbg-numbers',  log.numbers  || '(ingen fundet)', log.numbers ? 'ok' : 'err');
+  document.getElementById('debug-overlay').classList.add('visible');
+}
+function closeDebug() {
+  document.getElementById('debug-overlay').classList.remove('visible');
+  if (debugLog && debugLog.image) {
+    const numbers = debugLog.numbers ? debugLog.numbers.split(', ') : [];
+    openReviewFromScan(lastDataUrl, numbers);
+    debugLog = {};
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// Review screen
+// ════════════════════════════════════════════════════════════
+function genId() { return Date.now() + '-' + Math.random().toString(36).slice(2, 8); }
+
+function applyReviewLayout() {
+  let capturePct = cfg.reviewCapturePct;
+  let listPct    = cfg.reviewListPct;
+  let barPct     = cfg.reviewBottomBarPct;
+  const sum3 = capturePct + listPct + barPct;
+  let numpadPct = 100 - sum3;
+
+  if (numpadPct < 30) {
+    const scale = 70 / sum3;
+    capturePct *= scale; listPct *= scale; barPct *= scale;
+    numpadPct = 30;
+  }
+
+  document.getElementById('review-capture-wrap').style.flexBasis = capturePct + '%';
+  document.getElementById('review-list-wrap').style.flexBasis    = listPct + '%';
+  document.getElementById('review-bottom-bar').style.flexBasis   = barPct + '%';
+  document.getElementById('review-input-wrap').style.flexBasis   = numpadPct + '%';
+
+  document.getElementById('review-slots').style.fontSize = cfg.reviewFontSize + 'px';
+}
+
+function openReviewFromScan(dataUrl, numbers) {
+  reviewMode = 'scan';
+  editingMainId = null;
+  pendingItems = numbers.map(n => ({ id: genId(), number: n }));
+  startIdx = 0;
+  activeIdx = pendingItems.length; // point at the "add new" slot
+  activeBuffer = '';
+  reviewInputMode = 'numeric';
+
+  const img = document.getElementById('review-capture-img');
+  img.src = dataUrl;
+  document.getElementById('review-capture-wrap').classList.remove('empty');
+  document.getElementById('review-scan-btn').style.display = '';
+
+  applyReviewLayout();
+  setInputMode('numeric');
+  renderReviewList();
+
+  hide('scan-screen'); hide('main-screen'); show('review-screen');
+}
+
+function openReviewFromMain(id) {
+  const item = mainItems.find(o => o.id === id);
+  if (!item) return;
+
+  reviewMode = 'single';
+  editingMainId = id;
+  pendingItems = [{ id: item.id, number: item.number }];
+  startIdx = 0;
+  activeIdx = 0;
+  activeBuffer = item.number;
+  reviewInputMode = 'numeric';
+
+  document.getElementById('review-capture-img').src = '';
+  document.getElementById('review-capture-wrap').classList.add('empty');
+  document.getElementById('review-scan-btn').style.display = 'none';
+
+  applyReviewLayout();
+  setInputMode('numeric');
+  renderReviewList();
+
+  hide('main-screen'); hide('scan-screen'); show('review-screen');
+}
+
+// ── Virtual list helpers ──
+function virtualLength() {
+  return pendingItems.length + (reviewMode === 'scan' ? 1 : 0); // scan mode always has a trailing "add" slot
+}
+function maxStartIdx() {
+  return Math.max(0, virtualLength() - cfg.reviewSlots);
+}
+
 function renderReviewList() {
-  const listEl         = document.getElementById('order-list');
-  const dominantAddress = getDominantAddress();
+  const container = document.getElementById('review-slots');
+  container.innerHTML = '';
 
-  if (!scannedItems.length) {
-    listEl.innerHTML = '<div class="empty-msg">Ingen ordrer scannet endnu</div>';
-    document.getElementById('mail-btn').disabled = true;
+  for (let i = 0; i < cfg.reviewSlots; i++) {
+    const idx = startIdx + i;
+    const row = document.createElement('div');
+    row.className = 'review-slot';
+
+    if (idx < pendingItems.length) {
+      const item = pendingItems[idx];
+      const isActive = idx === activeIdx;
+      if (isActive) row.classList.add('active-slot');
+      row.innerHTML = `
+        <input type="text" readonly value="${escHtml(isActive ? activeBuffer : item.number)}"
+          onclick="selectSlot(${idx})">
+        <button class="btn-remove" onclick="deleteSlot(${idx})">✕</button>`;
+    } else if (reviewMode === 'scan' && idx === pendingItems.length) {
+      const isActive = idx === activeIdx;
+      row.classList.add('is-add');
+      if (isActive) row.classList.add('active-slot');
+      row.innerHTML = `
+        <input type="text" readonly placeholder="Tilføj…" value="${escHtml(isActive ? activeBuffer : '')}"
+          onclick="selectSlot(${idx})">
+        <div style="width:32px;flex-shrink:0"></div>`;
+    } else {
+      row.classList.add('empty-slot');
+    }
+    container.appendChild(row);
+  }
+
+  document.getElementById('arrow-up').disabled   = startIdx <= 0;
+  document.getElementById('arrow-up').classList.toggle('active', startIdx > 0);
+  document.getElementById('arrow-down').disabled = startIdx >= maxStartIdx();
+  document.getElementById('arrow-down').classList.toggle('active', startIdx < maxStartIdx());
+}
+
+function selectSlot(idx) {
+  if (idx === activeIdx) return;
+  commitActiveBuffer();
+  activeIdx = idx;
+  activeBuffer = idx < pendingItems.length ? pendingItems[idx].number : '';
+  renderReviewList();
+  syncAlphaInputFromBuffer();
+}
+
+function navigateList(direction) {
+  commitActiveBuffer();
+  startIdx = Math.min(maxStartIdx(), Math.max(0, startIdx + direction));
+  renderReviewList();
+}
+
+function deleteSlot(idx) {
+  pendingItems.splice(idx, 1);
+  if (idx < activeIdx) activeIdx--;
+  else if (idx === activeIdx) { activeIdx = pendingItems.length; activeBuffer = ''; }
+  startIdx = Math.min(startIdx, maxStartIdx());
+  renderReviewList();
+  syncAlphaInputFromBuffer();
+}
+
+function commitActiveBuffer() {
+  const val = activeBuffer.trim();
+  if (activeIdx < pendingItems.length) {
+    if (val) pendingItems[activeIdx].number = val;
+    else { pendingItems.splice(activeIdx, 1); } // cleared to empty -> remove
+  } else if (reviewMode === 'scan' && val) {
+    pendingItems.push({ id: genId(), number: val });
+  }
+}
+
+function updateActiveSlotDisplay() {
+  // Find the visible row matching activeIdx and update its input value directly (avoids full re-render flicker)
+  const rows = document.querySelectorAll('#review-slots .review-slot');
+  const i = activeIdx - startIdx;
+  if (i >= 0 && i < rows.length) {
+    const input = rows[i].querySelector('input');
+    if (input) input.value = activeBuffer;
+  }
+}
+
+// ── Numpad (numeric mode) ──
+function rnpInput(char) {
+  if (activeBuffer.length >= 6) return;
+  activeBuffer += char;
+  updateActiveSlotDisplay();
+}
+function rnpBackspace() {
+  activeBuffer = activeBuffer.slice(0, -1);
+  updateActiveSlotDisplay();
+}
+
+// ── Alpha mode ──
+function onAlphaInput(val) {
+  activeBuffer = val;
+  updateActiveSlotDisplay();
+}
+function syncAlphaInputFromBuffer() {
+  const el = document.getElementById('alpha-input');
+  if (el) el.value = activeBuffer;
+}
+function toggleInputMode() {
+  setInputMode(reviewInputMode === 'numeric' ? 'alpha' : 'numeric');
+}
+function setInputMode(mode) {
+  reviewInputMode = mode;
+  const numpad = document.getElementById('numpad');
+  const alphaWrap = document.getElementById('alpha-input-wrap');
+  const btn = document.getElementById('mode-toggle-btn');
+  if (mode === 'alpha') {
+    numpad.classList.add('hidden-mode');
+    alphaWrap.classList.add('visible');
+    btn.textContent = '123';
+    syncAlphaInputFromBuffer();
+    setTimeout(() => document.getElementById('alpha-input').focus(), 50);
+  } else {
+    numpad.classList.remove('hidden-mode');
+    alphaWrap.classList.remove('visible');
+    btn.textContent = 'ABC';
+  }
+}
+
+// ── Close Review ──
+function closeReview(action) {
+  commitActiveBuffer();
+
+  if (reviewMode === 'single') {
+    if (pendingItems.length === 0) {
+      // Item was cleared/deleted -> remove from main list
+      mainItems = mainItems.filter(o => o.id !== editingMainId);
+    } else {
+      const mi = mainItems.find(o => o.id === editingMainId);
+      if (mi) mi.number = pendingItems[0].number;
+    }
+    goToMain();
     return;
   }
 
-  listEl.innerHTML = scannedItems.map(item => {
-    const hasMismatch = dominantAddress
-      && item.destinationAddress
-      && item.destinationAddress !== dominantAddress;
-    const titleAttr = hasMismatch
-      ? `title="Adresse afviger: ${item.destinationAddress} (forventet: ${dominantAddress})"`
-      : '';
-    return `
-      <div class="order-item">
-        <input type="text" value="${escapeHtml(item.orderNumber)}"
-          class="${hasMismatch ? 'address-mismatch' : ''}" ${titleAttr}
-          onchange="updateOrderNumber('${item.id}', this.value)">
-        <button class="btn-remove" onclick="removeItem('${item.id}')">✕</button>
-      </div>`;
-  }).join('');
+  // reviewMode === 'scan'
+  const existingNumbers = new Set(mainItems.map(o => o.number));
+  pendingItems.forEach(p => {
+    if (p.number && !existingNumbers.has(p.number)) {
+      mainItems.push({ id: genId(), number: p.number });
+      existingNumbers.add(p.number);
+    }
+  });
 
+  if (action === 'x') {
+    goToMain();
+  } else {
+    show('scan-screen'); hide('review-screen');
+    // Camera stream still running from before — no need to restart
+  }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ════════════════════════════════════════════════════════════
+// Main list
+// ════════════════════════════════════════════════════════════
+function renderMainList() {
+  const list = document.getElementById('order-list');
+  if (!mainItems.length) {
+    list.innerHTML = '<div class="empty-msg">Ingen ordrer scannet endnu</div>';
+    document.getElementById('mail-btn').disabled = true;
+    return;
+  }
+  list.innerHTML = mainItems.map(item => `
+    <div class="order-item">
+      <button class="order-number-btn" onclick="openReviewFromMain('${item.id}')">${escHtml(item.number)}</button>
+      <button class="btn-remove" onclick="removeMainItem('${item.id}')">✕</button>
+    </div>`).join('');
   document.getElementById('mail-btn').disabled = false;
 }
-
-function updateOrderNumber(id, value) {
-  const item = scannedItems.find(i => i.id == id);
-  if (item) item.orderNumber = value;
-}
-function removeItem(id) {
-  scannedItems = scannedItems.filter(i => i.id != id);
-  renderReviewList();
-}
-function escapeHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function removeMainItem(id) {
+  mainItems = mainItems.filter(o => o.id !== id);
+  renderMainList();
 }
 
-// ── Mail ───────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+// Mail
+// ════════════════════════════════════════════════════════════
 function openMail() {
-  const subjectLine = scannedItems.map(i => i.orderNumber).join(', ');
-  window.location.href = `mailto:${cfg.recipientEmail}?subject=${encodeURIComponent(subjectLine)}`;
-  scannedItems = [];
-  renderReviewList();
+  const subject = mainItems.map(o => o.number).join(', ');
+  window.location.href = `mailto:${cfg.email}?subject=${encodeURIComponent(subject)}`;
+  mainItems = [];
+  renderMainList();
 }
 </script>
 </body>
