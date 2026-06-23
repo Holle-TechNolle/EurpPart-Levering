@@ -210,7 +210,7 @@ body { background: #111; color: #fff; font-family: system-ui, sans-serif; height
       <button class="np-btn" onclick="rnpInput('7')">7</button>
       <button class="np-btn" onclick="rnpInput('8')">8</button>
       <button class="np-btn" onclick="rnpInput('9')">9</button>
-      <button class="np-btn np-inert">·</button>
+      <button class="np-btn np-special" onclick="rnpSpace()">␣</button>
       <button class="np-btn" onclick="rnpInput('0')">0</button>
       <button class="np-btn np-special" onclick="rnpBackspace()">⌫</button>
     </div>
@@ -726,7 +726,12 @@ function updateActiveSlotDisplay() {
 }
 
 // ── Numpad (numeric mode) ──
-function rnpInput(char) {
+function rnpSpace() {
+  if (activeBuffer.length >= 6) return;
+  activeBuffer += ' ';
+  updateActiveSlotDisplay();
+}
+
   if (activeBuffer.length >= 6) return;
   activeBuffer += char;
   updateActiveSlotDisplay();
