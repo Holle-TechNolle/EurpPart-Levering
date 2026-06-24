@@ -97,7 +97,6 @@ body { background: #111; color: #fff; font-family: system-ui, sans-serif; height
 #numpad { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; min-height: 0; }
 .np-btn { background: #2a2a2a; border: none; color: #fff; border-radius: 8px; font-size: 20px; font-weight: 500; cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; }
 .np-btn:active { background: #444; }
-.np-btn.np-inert { color: #3a3a3a; cursor: default; }
 .np-btn.np-special { color: #aaa; font-size: 16px; }
 #alpha-input-wrap { display: none; flex: 1; }
 #alpha-input-wrap.visible { display: flex; }
@@ -369,7 +368,8 @@ function show(id) { document.getElementById(id).classList.add('active'); }
 function hide(id) { document.getElementById(id).classList.remove('active'); }
 
 function goToMain() {
-  setTorch(false); stopCamera(); closeDebug();
+  setTorch(false); stopCamera();
+  _debugCloseToReview = false; closeDebug(); _debugCloseToReview = true;
   hide('scan-screen'); hide('review-screen'); show('main-screen');
   renderMainList();
 }
@@ -454,7 +454,7 @@ async function runGoogleVision(dataUrl) {
 // Ordrelinjen er den linje der slutter med "/ initialer" (1-4 bogstaver, evt. mellemrum før/efter skråstreg)
 function extractOrderLine(text) {
   const lines = text.split('\n');
-  return lines.find(l => /\/\s*[A-Za-zÆØÅæøå]{1,4}\s*$/.test(l.trim())) || '';
+  return lines.find(l => !/Fra|From/i.test(l) && /\/\s*[A-Za-zÆØÅæøå]{1,4}\s*$/.test(l.trim())) || '';
 }
 // Ordrenumre: diskrete 4-6-cifrede grupper, men KUN fra ordrelinjen
 function extractOrderNumbers(text) {
@@ -557,13 +557,14 @@ function showDebug(log) {
   set('dbg-customer',  log.customer  || '(ikke aflæst)', log.customer ? 'ok' : 'err');
   document.getElementById('debug-overlay').classList.add('visible');
 }
+let _debugCloseToReview = true;
 function closeDebug() {
   document.getElementById('debug-overlay').classList.remove('visible');
-  if (debugLog && debugLog.image) {
+  if (_debugCloseToReview && debugLog && debugLog.image) {
     const numbers = debugLog.numbers ? debugLog.numbers.split(', ') : [];
     openReviewFromScan(lastDataUrl, numbers, debugLog.customer || null);
-    debugLog = {};
   }
+  debugLog = {};
 }
 
 // ════════════════════════════════════════════════════════════
@@ -727,11 +728,13 @@ function updateActiveSlotDisplay() {
 
 // ── Numpad (numeric mode) ──
 function rnpSpace() {
-  if (activeBuffer.length >= 6) return;
+  // Mellemrum er separator — tæller ikke med i 6-tegns grænsen for ordrenummeret
+  const digits = activeBuffer.replace(/\s/g, '').length;
+  if (digits === 0) return; // ingen cifre endnu — mellemrum giver ikke mening
   activeBuffer += ' ';
   updateActiveSlotDisplay();
 }
-
+function rnpInput(char) {
   if (activeBuffer.length >= 6) return;
   activeBuffer += char;
   updateActiveSlotDisplay();
@@ -799,6 +802,7 @@ function closeReview(action) {
     goToMain();
   } else {
     show('scan-screen'); hide('review-screen');
+    if (!stream) startCamera();
   }
 }
 
@@ -822,8 +826,8 @@ function computeItemStatuses() {
 
   const statuses = {};
   mainItems.forEach(it => {
-    if (!it.customerNumber) { statuses[it.id] = 'blue'; return; }
-    if (dominant === null)  { statuses[it.id] = 'red';  return; } // intet klart flertal -> alle involverede røde
+    if (!it.customerNumber) { statuses[it.id] = 'blue'; return; } // mangler kundenr -> blå, aldrig overskrevet
+    if (dominant === null)  { statuses[it.id] = 'red';  return; } // intet klart flertal -> rød (kun items med kundenr)
     statuses[it.id] = it.customerNumber === dominant ? 'normal' : 'red';
   });
   return statuses;
