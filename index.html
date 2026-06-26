@@ -25,22 +25,22 @@
   --green-ok:  #4ade80;
 }
 body.highcontrast {
-  --bg:        #000;
-  --bg2:       #111;
-  --bg3:       #222;
-  --border:    #fff;
-  --text:      #fff;
-  --text2:     #fff;
-  --text3:     #ccc;
-  --accent:    #FFE000;
-  --accent2:   #FFE000;
-  --red:       #FF3B30;
-  --red-text:  #FF3B30;
-  --red-bg:    #1a0000;
-  --blue-mark: #00CFFF;
-  --blue-text: #00CFFF;
-  --blue-bg:   #001a1f;
-  --green-ok:  #FFE000;
+  --bg:        #ffffff;
+  --bg2:       #f0f0f0;
+  --bg3:       #222222;
+  --border:    #000000;
+  --text:      #000000;
+  --text2:     #222222;
+  --text3:     #444444;
+  --accent:    #000000;
+  --accent2:   #000000;
+  --red:       #FF0000;
+  --red-text:  #FF0000;
+  --red-bg:    #fff0f0;
+  --blue-mark: #0000FF;
+  --blue-text: #0000FF;
+  --blue-bg:   #f0f0ff;
+  --green-ok:  #00FF00;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; height: 100dvh; overflow: hidden; }
@@ -60,7 +60,7 @@ body { background: var(--bg); color: var(--text); font-family: system-ui, sans-s
   padding: 13px 12px; border-radius: 10px; font-size: 17px; font-variant-numeric: tabular-nums;
   text-align: left; cursor: pointer;
 }
-.order-number-btn:active { background: #262626; }
+.order-number-btn:active { background: var(--bg3); }
 .order-number-btn.status-red  { border-color: var(--red); color: var(--red-text); background: var(--red-bg); }
 .order-number-btn.status-blue { border-color: var(--blue-mark); color: var(--blue-text); background: var(--blue-bg); }
 .btn-remove { background: var(--bg3); border: none; color: var(--text2); width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; flex-shrink: 0; }
@@ -68,6 +68,14 @@ body { background: var(--bg); color: var(--text); font-family: system-ui, sans-s
 .btn { flex: 1; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; }
 .btn-scan { background: var(--accent); color: var(--text); }
 .btn-mail { background: var(--accent2); color: var(--text); }
+body.highcontrast .btn-scan,
+body.highcontrast .btn-mail,
+body.highcontrast .btn-save,
+body.highcontrast .btn-debug-close { color: #ffffff; }
+body.highcontrast .btn-cancel { background: #ffffff; border: 2px solid #000; color: #000; }
+body.highcontrast .btn-back-x  { background: #ffffff; border: 2px solid #000; color: #000; }
+body.highcontrast .np-btn { background: #222; color: #fff; }
+body.highcontrast .btn-capture { background: #fff; border-color: #000; color: #000; }
 .btn-mail:disabled { background: var(--bg3); color: var(--text3); cursor: default; }
 
 /* ── Scan ── */
@@ -152,7 +160,7 @@ body { background: var(--bg); color: var(--text); font-family: system-ui, sans-s
 .modal.active { display: flex; }
 .modal-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 18px; padding: 24px; width: 90%; max-width: 420px; max-height: 90dvh; overflow-y: auto; }
 .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
-.modal-section { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin: 18px 0 10px; border-bottom: 1px solid #2a2a2a; padding-bottom: 4px; }
+.modal-section { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin: 18px 0 10px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
 .modal-box label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 4px; margin-top: 10px; }
 .modal-box input[type=email], .modal-box input[type=number], .modal-box input[type=text], .modal-box input[type=password] { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 11px 12px; border-radius: 9px; font-size: 15px; }
 .setting-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
@@ -163,7 +171,7 @@ body { background: var(--bg); color: var(--text); font-family: system-ui, sans-s
 .toggle input:checked + .toggle-track { background: var(--accent); }
 .toggle-track::after { content: ''; position: absolute; width: 20px; height: 20px; background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; }
 .toggle input:checked + .toggle-track::after { transform: translateX(18px); }
-.modal-hint { font-size: 11px; color: #444; margin-top: 4px; }
+.modal-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
 .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
 .btn-save { background: var(--accent); color: var(--text); }
 .btn-cancel { background: var(--bg3); color: var(--text2); }
@@ -246,7 +254,7 @@ body { background: var(--bg); color: var(--text); font-family: system-ui, sans-s
       <button class="np-btn" onclick="rnpInput('7')">7</button>
       <button class="np-btn" onclick="rnpInput('8')">8</button>
       <button class="np-btn" onclick="rnpInput('9')">9</button>
-      <button class="np-btn np-special" onclick="rnpSpace()">SPC</button>
+      <button class="np-btn np-special" onclick="rnpSpace()">,</button>
       <button class="np-btn" onclick="rnpInput('0')">0</button>
       <button class="np-btn np-special" onclick="rnpBackspace()">⌫</button>
     </div>
@@ -760,10 +768,18 @@ function deleteSlot(idx) {
 function commitActiveBuffer() {
   const val = activeBuffer.trim();
   if (activeIdx < pendingItems.length) {
-    if (val) pendingItems[activeIdx].number = val;
-    else pendingItems.splice(activeIdx, 1);
+    if (val) {
+      pendingItems[activeIdx].number = val;
+    } else {
+      pendingItems.splice(activeIdx, 1);
+      // Peg på tilføj-slot eller sidst gyldige index efter sletning
+      activeIdx = Math.min(activeIdx, pendingItems.length);
+      activeBuffer = '';
+    }
   } else if (reviewMode === 'scan' && val) {
     pendingItems.push({ id: genId(), number: val, customerNumber: scanCustomerNumber });
+    activeIdx = pendingItems.length; // peg på ny tilføj-slot
+    activeBuffer = '';
   }
 }
 
@@ -778,15 +794,15 @@ function updateActiveSlotDisplay() {
 
 // ── Numpad (numeric mode) ──
 function rnpSpace() {
-  // Mellemrum er separator — tæller ikke med i 6-tegns grænsen for ordrenummeret
-  const digits = activeBuffer.replace(/\s/g, '').length;
-  if (digits === 0) return; // ingen cifre endnu — mellemrum giver ikke mening
-  activeBuffer += ' ';
+  // Komma er separator — tæller ikke med i 6-tegns grænsen for ordrenummeret
+  const digits = activeBuffer.replace(/[^0-9]/g, '').length;
+  if (digits === 0) return; // ingen cifre endnu — komma giver ikke mening
+  activeBuffer += ',';
   updateActiveSlotDisplay();
 }
 function rnpInput(char) {
-  // Tæl kun cifre — mellemrum (separator) tæller ikke med i 6-tegns grænsen
-  const digits = activeBuffer.replace(/\s/g, '').length;
+  // Tæl kun cifre — komma (separator) tæller ikke med i 6-tegns grænsen
+  const digits = activeBuffer.replace(/[^0-9]/g, '').length;
   if (digits >= 6) return;
   activeBuffer += char;
   updateActiveSlotDisplay();
