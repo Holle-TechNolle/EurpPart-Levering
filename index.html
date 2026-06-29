@@ -68,17 +68,17 @@ body { background: var(--bg); color: var(--text); font-family: system-ui, sans-s
 .btn { flex: 1; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; }
 .btn-scan { background: var(--accent); color: var(--text); }
 .btn-mail { background: var(--accent2); color: var(--text); }
-body.highcontrast .btn-scan,
 body.highcontrast .btn-mail,
-body.highcontrast .btn-save,
 body.highcontrast .btn-debug-close { color: #ffffff; }
+body.highcontrast .btn-scan { background: #ffffff; border: 2px solid #000; color: #000; }
+body.highcontrast .btn-save { background: #ffffff; border: 2px solid #000; color: #000; }
 body.highcontrast .btn-cancel { background: #ffffff; border: 2px solid #000; color: #000; }
 body.highcontrast .btn-back-x  { background: #ffffff; border: 2px solid #000; color: #000; }
 body.highcontrast .np-btn { background: #f0f0f0; color: #000; border: 1px solid #000; }
 body.highcontrast #review-input-wrap { background: #f0f0f0; }
 body.highcontrast #review-bottom-bar { background: #f0f0f0; }
 body.highcontrast #review-bottom-bar .btn-back-x { background: #ffffff; border: 2px solid #000; color: #000; }
-body.highcontrast #review-bottom-bar .btn-scan { background: #000; color: #fff; border: none; }
+body.highcontrast #review-bottom-bar .btn-scan { background: #ffffff; border: 2px solid #000; color: #000; }
 body.highcontrast .btn-capture { background: #fff; border-color: #000; color: #000; }
 body.highcontrast .btn-mode-toggle { background: #f0f0f0; border-color: #000; color: #000; }
 body.highcontrast .btn-settings { background: #e0e0e0; color: #000; }
@@ -86,6 +86,7 @@ body.highcontrast .btn-remove { background: #e0e0e0; color: #000; }
 body.highcontrast .toggle-track { background: #ccc; }
 body.highcontrast .toggle input:checked + .toggle-track { background: #000; }
 .btn-mail:disabled { background: var(--bg3); color: var(--text3); cursor: default; }
+body.highcontrast .btn-mail:disabled { background: #ccc; color: #666; }
 
 /* ── Scan ── */
 #scan-screen { position: relative; background: #000; }
@@ -226,7 +227,9 @@ body.highcontrast .toggle input:checked + .toggle-track { background: #000; }
     <div class="debug-section">Kundenummer (Til/To)</div>
     <div class="debug-content" id="dbg-customer"></div>
     <div class="debug-section">Regex'er i brug</div>
-    <div class="debug-content" id="dbg-regexes"></div>
+    <div class="debug-content" id="dbg-rx1"></div>
+    <div class="debug-content" id="dbg-rx2"></div>
+    <div class="debug-content" id="dbg-rx3"></div>
     <button class="btn-debug-close" onclick="closeDebug()">Luk debug</button>
   </div>
 
@@ -624,11 +627,18 @@ function showDebug(log) {
   set('dbg-orderline', log.orderline || '(ingen linje matcher "/ initialer")', log.orderline ? 'ok' : 'err');
   set('dbg-numbers',   log.numbers   || '(ingen fundet)', log.numbers ? 'ok' : 'err');
   set('dbg-customer',  log.customer  || '(ikke aflæst)', log.customer ? 'ok' : 'err');
-  document.getElementById('dbg-regexes').textContent = [
-    'Ordrelinje:     !/Fra|From/i  +  /\/\\s*[A-Za-zÆØÅæøå]{1,4}\\s*$/',
-    'Ordrenumre:     /\\b\\d{4,6}\\b/g  (kun på ordrelinjen)',
-    'Kundenummer:    /T.{2}\/T.\\s+(\\d{5})/i',
-  ].join('\n');
+  const rxEls = [
+    ['dbg-rx1', 'Ordrelinje: !/Fra|From/i  +  /\/\s*[A-Za-zÆØÅæøå]{1,4}\s*$/'],
+    ['dbg-rx2', 'Ordrenumre: /\b\d{4,6}\b/g  (kun på ordrelinjen)'],
+    ['dbg-rx3', 'Kundenummer: /T.{2}\/T.\s+(\d{5})/i'],
+  ];
+  rxEls.forEach(([id, txt]) => {
+    const el = document.getElementById(id);
+    el.textContent = txt;
+    el.style.color = '#000';
+    el.style.background = '#f5f5f5';
+    el.style.borderColor = '#bbb';
+  });
   document.getElementById('debug-overlay').classList.add('visible');
 }
 let _debugCloseToReview = true;
