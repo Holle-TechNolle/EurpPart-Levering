@@ -75,7 +75,16 @@ body.highcontrast .btn-debug-close { color: #ffffff; }
 body.highcontrast .btn-cancel { background: #ffffff; border: 2px solid #000; color: #000; }
 body.highcontrast .btn-back-x  { background: #ffffff; border: 2px solid #000; color: #000; }
 body.highcontrast .np-btn { background: #f0f0f0; color: #000; border: 1px solid #000; }
+body.highcontrast #review-input-wrap { background: #f0f0f0; }
+body.highcontrast #review-bottom-bar { background: #f0f0f0; }
+body.highcontrast #review-bottom-bar .btn-back-x { background: #ffffff; border: 2px solid #000; color: #000; }
+body.highcontrast #review-bottom-bar .btn-scan { background: #000; color: #fff; border: none; }
 body.highcontrast .btn-capture { background: #fff; border-color: #000; color: #000; }
+body.highcontrast .btn-mode-toggle { background: #f0f0f0; border-color: #000; color: #000; }
+body.highcontrast .btn-settings { background: #e0e0e0; color: #000; }
+body.highcontrast .btn-remove { background: #e0e0e0; color: #000; }
+body.highcontrast .toggle-track { background: #ccc; }
+body.highcontrast .toggle input:checked + .toggle-track { background: #000; }
 .btn-mail:disabled { background: var(--bg3); color: var(--text3); cursor: default; }
 
 /* ── Scan ── */
@@ -105,12 +114,12 @@ body.highcontrast .btn-capture { background: #fff; border-color: #000; color: #0
 .scan-spacer { width: 56px; }
 
 /* ── Debug overlay ── */
-#debug-overlay { display: none; position: absolute; inset: 0; z-index: 30; background: rgba(0,0,0,0.94); flex-direction: column; padding: 20px; gap: 10px; overflow-y: auto; }
+#debug-overlay { display: none; position: absolute; inset: 0; z-index: 30; background: rgba(0,0,0,0.94); flex-direction: column; padding: 20px; gap: 10px; overflow-y: auto; color: #fff; }
 #debug-overlay.visible { display: flex; }
 .debug-title { font-size: 16px; font-weight: 700; color: #facc15; }
-.debug-section { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px; }
+.debug-section { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px; }
 .debug-content { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 13px; color: #ccc; font-family: monospace; white-space: pre-wrap; word-break: break-all; max-height: 160px; overflow-y: auto; }
-.debug-content.ok  { border-color: #15803d; color: var(--green-ok); }
+.debug-content.ok  { border-color: var(--accent2); color: var(--green-ok); }
 .debug-content.err { border-color: var(--red); color: var(--red-text); }
 .btn-debug-close { background: var(--accent); border: none; color: var(--text); padding: 14px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: auto; }
 
@@ -120,9 +129,9 @@ body.highcontrast .btn-capture { background: #fff; border-color: #000; color: #0
 #review-capture-wrap img { width: 100%; height: 100%; object-fit: contain; }
 #review-capture-wrap.empty { background: #000; }
 
-#review-list-wrap { flex: 0 0 auto; display: flex; gap: 6px; padding: 8px 12px; background: var(--bg2); border-top: 1px solid #222; border-bottom: 1px solid #222; }
+#review-list-wrap { flex: 0 0 auto; display: flex; gap: 6px; padding: 8px 12px; background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 #review-arrows { display: flex; flex-direction: column; justify-content: space-between; width: 36px; flex-shrink: 0; }
-.arrow-btn { background: var(--bg2); border: 1px solid var(--border); color: #666; border-radius: 8px; font-size: 16px; cursor: pointer; flex: 1; }
+.arrow-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text3); border-radius: 8px; font-size: 16px; cursor: pointer; flex: 1; }
 .arrow-btn.active { color: var(--green-ok); border-color: var(--accent2); background: var(--blue-bg); }
 .arrow-btn:disabled { cursor: default; }
 #review-slots { flex: 1; display: flex; flex-direction: column; gap: 4px; }
@@ -132,7 +141,7 @@ body.highcontrast .btn-capture { background: #fff; border-color: #000; color: #0
   flex: 1; height: 100%; background: var(--bg2); border: 1px solid var(--border); color: var(--text);
   border-radius: 8px; padding: 0 10px; font-variant-numeric: tabular-nums;
 }
-.review-slot.active-slot input { border-color: #1d4ed8; background: var(--blue-bg); }
+.review-slot.active-slot input { border-color: var(--accent); background: var(--blue-bg); }
 .review-slot .btn-remove { width: 32px; height: 32px; font-size: 14px; flex-shrink: 0; }
 .review-slot.is-add input { color: var(--text2); }
 
@@ -141,7 +150,7 @@ body.highcontrast .btn-capture { background: #fff; border-color: #000; color: #0
 .btn-mode-toggle { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); font-size: 12px; padding: 5px 12px; border-radius: 14px; cursor: pointer; }
 #numpad { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; min-height: 0; }
 .np-btn { background: var(--bg3); border: none; color: var(--text); border-radius: 8px; font-size: 20px; font-weight: 500; cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; }
-.np-btn:active { background: #444; }
+.np-btn:active { background: var(--bg3); }
 .np-btn.np-special { color: var(--text2); font-size: 16px; }
 #alpha-input-wrap { display: none; flex: 1; }
 #alpha-input-wrap.visible { display: flex; }
@@ -216,6 +225,8 @@ body.highcontrast .btn-capture { background: #fff; border-color: #000; color: #0
     <div class="debug-content" id="dbg-numbers"></div>
     <div class="debug-section">Kundenummer (Til/To)</div>
     <div class="debug-content" id="dbg-customer"></div>
+    <div class="debug-section">Regex'er i brug</div>
+    <div class="debug-content" id="dbg-regexes"></div>
     <button class="btn-debug-close" onclick="closeDebug()">Luk debug</button>
   </div>
 
@@ -523,7 +534,7 @@ function extractOrderNumbers(text) {
 }
 // Kundenummer: linjen "Til/To" eller "Til/Te" efterfulgt af præcis 5 cifre (programgenereret felt)
 function extractCustomerNumber(text) {
-  const m = text.match(/Til\s*\/\s*T[oe]\s+(\d{5})/i);
+  const m = text.match(/T.{2}\/T.\s+(\d{5})/i);
   return m ? m[1] : null;
 }
 
@@ -613,6 +624,11 @@ function showDebug(log) {
   set('dbg-orderline', log.orderline || '(ingen linje matcher "/ initialer")', log.orderline ? 'ok' : 'err');
   set('dbg-numbers',   log.numbers   || '(ingen fundet)', log.numbers ? 'ok' : 'err');
   set('dbg-customer',  log.customer  || '(ikke aflæst)', log.customer ? 'ok' : 'err');
+  document.getElementById('dbg-regexes').textContent = [
+    'Ordrelinje:     !/Fra|From/i  +  /\/\\s*[A-Za-zÆØÅæøå]{1,4}\\s*$/',
+    'Ordrenumre:     /\\b\\d{4,6}\\b/g  (kun på ordrelinjen)',
+    'Kundenummer:    /T.{2}\/T.\\s+(\\d{5})/i',
+  ].join('\n');
   document.getElementById('debug-overlay').classList.add('visible');
 }
 let _debugCloseToReview = true;
