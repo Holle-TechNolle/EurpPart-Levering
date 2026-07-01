@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Europart Levering</title>
 <style>
-/* ── Farvetemaer via CSS custom properties ── */
+/* ── Farvetemaer ── */
 :root {
   --bg:        #111;
   --bg2:       #1a1a1a;
@@ -42,53 +42,133 @@ body.highcontrast {
   --blue-bg:   #f0f0ff;
   --green-ok:  #00FF00;
 }
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; height: 100dvh; overflow: hidden; }
 .screen { display: none; flex-direction: column; height: 100dvh; }
 .screen.active { display: flex; }
 
-/* ── Main ── */
-#main-screen { padding: 16px; gap: 12px; }
-.screen-header { display: flex; justify-content: space-between; align-items: center; }
-.screen-title { font-size: 20px; font-weight: 600; color: var(--text); }
-.btn-settings { background: var(--bg3); border: none; color: var(--text2); width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; }
-.order-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 2px; }
-.empty-msg { color: var(--text3); text-align: center; margin-top: 60px; font-size: 15px; }
-.order-item { display: flex; align-items: center; gap: 8px; }
-.order-number-btn {
-  flex: 1; background: var(--bg2); border: 1px solid var(--border); color: var(--text);
-  padding: 13px 12px; border-radius: 10px; font-size: 17px; font-variant-numeric: tabular-nums;
-  text-align: left; cursor: pointer;
-}
-.order-number-btn:active { background: var(--bg3); }
-.order-number-btn.status-red  { border-color: var(--red); color: var(--red-text); background: var(--red-bg); }
-.order-number-btn.status-blue { border-color: var(--blue-mark); color: var(--blue-text); background: var(--blue-bg); }
-.btn-remove { background: var(--bg3); border: none; color: var(--text2); width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; flex-shrink: 0; }
-.bottom-bar { display: flex; gap: 10px; padding-top: 4px; }
-.btn { flex: 1; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; }
-.btn-scan { background: var(--accent); color: var(--text); }
-.btn-mail { background: var(--accent2); color: var(--text); }
-body.highcontrast .btn-mail,
-body.highcontrast .btn-debug-close { color: #ffffff; }
-body.highcontrast .btn-scan { background: #ffffff; border: 2px solid #000; color: #000; }
-body.highcontrast .btn-save { background: #ffffff; border: 2px solid #000; color: #000; }
-body.highcontrast .btn-cancel { background: #ffffff; border: 2px solid #000; color: #000; }
-body.highcontrast .btn-back-x  { background: #ffffff; border: 2px solid #000; color: #000; }
-body.highcontrast .np-btn { background: #f0f0f0; color: #000; border: 1px solid #000; }
-body.highcontrast #review-input-wrap { background: #f0f0f0; }
-body.highcontrast #review-bottom-bar { background: #f0f0f0; }
-body.highcontrast #review-bottom-bar .btn-back-x { background: #ffffff; border: 2px solid #000; color: #000; }
-body.highcontrast #review-bottom-bar .btn-scan { background: #ffffff; border: 2px solid #000; color: #000; }
-body.highcontrast .btn-capture { background: #fff; border-color: #000; color: #000; }
-body.highcontrast .btn-mode-toggle { background: #f0f0f0; border-color: #000; color: #000; }
-body.highcontrast .btn-settings { background: #e0e0e0; color: #000; }
-body.highcontrast .btn-remove { background: #e0e0e0; color: #000; }
-body.highcontrast .toggle-track { background: #ccc; }
-body.highcontrast .toggle input:checked + .toggle-track { background: #000; }
-.btn-mail:disabled { background: var(--bg3); color: var(--text3); cursor: default; }
-body.highcontrast .btn-mail:disabled { background: #ccc; color: #666; }
+/* ══════════════════════════════════
+   Main screen
+══════════════════════════════════ */
+#main-screen { background: var(--bg); }
 
-/* ── Scan ── */
+/* Capture-billede — altid mørkt uanset tema */
+#main-capture-wrap {
+  flex: 0 0 auto;
+  background: #000;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+#main-capture-img { width: 100%; height: 100%; object-fit: contain; }
+#main-capture-empty {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #333; font-size: 13px;
+}
+
+/* Liste */
+#main-list-wrap {
+  flex: 0 0 auto;
+  display: flex; gap: 6px;
+  padding: 6px 10px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+#main-list-arrows {
+  display: flex; flex-direction: column; justify-content: space-between;
+  width: 36px; flex-shrink: 0;
+}
+.arrow-btn {
+  background: var(--bg2); border: 1px solid var(--border); color: var(--text3);
+  border-radius: 8px; font-size: 16px; cursor: pointer; flex: 1;
+}
+.arrow-btn.active { color: var(--green-ok); border-color: var(--accent2); background: var(--blue-bg); }
+.arrow-btn:disabled { cursor: default; }
+#main-list-slots { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.list-slot { flex: 1; display: flex; align-items: center; gap: 6px; min-height: 0; }
+.list-slot.empty-slot { visibility: hidden; }
+.slot-input {
+  flex: 1; height: 100%; background: var(--bg2); border: 1px solid var(--border); color: var(--text);
+  border-radius: 8px; padding: 0 10px; font-variant-numeric: tabular-nums;
+}
+.slot-input.status-red  { border-color: var(--red);       color: var(--red-text);  background: var(--red-bg); }
+.slot-input.status-blue { border-color: var(--blue-mark); color: var(--blue-text); background: var(--blue-bg); }
+.list-slot.active-slot .slot-input { border-color: var(--accent); background: var(--blue-bg); }
+
+/* Aktiv slot — custom display m cursor */
+.slot-display {
+  flex: 1; height: 100%; background: var(--blue-bg); border: 1px solid var(--accent);
+  border-radius: 8px; padding: 0 10px; font-variant-numeric: tabular-nums; color: var(--text);
+  display: flex; align-items: center; cursor: text; overflow: hidden;
+}
+.slot-cursor {
+  display: inline-block; width: 2px; height: 1.1em; background: var(--text);
+  margin-left: 1px; vertical-align: middle; animation: blink 1s step-start infinite;
+  flex-shrink: 0;
+}
+@keyframes blink { 50% { opacity: 0; } }
+.slot-remove {
+  background: var(--bg3); border: none; color: var(--text2);
+  width: 32px; height: 32px; border-radius: 50%; font-size: 14px; cursor: pointer; flex-shrink: 0;
+}
+
+/* Input-sektion */
+#main-input-wrap {
+  flex: 1 1 auto; display: flex; flex-direction: column;
+  padding: 6px 10px; gap: 6px; background: var(--bg); min-height: 0;
+}
+#input-controls-row {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; align-items: center;
+}
+.btn-add-item, .btn-mode-toggle {
+  background: var(--bg3); border: 1px solid var(--border); color: var(--text2);
+  font-size: 13px; padding: 6px 14px; border-radius: 14px; cursor: pointer;
+}
+#numpad {
+  flex: 1; display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 6px; min-height: 0;
+}
+.np-btn {
+  background: var(--bg3); border: none; color: var(--text);
+  border-radius: 8px; font-size: 20px; font-weight: 500; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.np-btn:active { filter: brightness(1.4); }
+.np-btn.np-special { color: var(--text2); font-size: 16px; }
+#numpad.hidden-mode { display: none; }
+#alpha-input-wrap { display: none; flex: 1; }
+#alpha-input-wrap.visible { display: flex; }
+#alpha-input {
+  flex: 1; background: var(--bg2); border: 1px solid var(--border); color: var(--text);
+  border-radius: 10px; padding: 0 14px; font-size: 20px;
+}
+
+/* Bundbjælke */
+#main-bottom-bar {
+  flex: 0 0 auto;
+  display: flex; gap: 6px;
+  padding: 6px 10px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  border-top: 4px solid var(--border);
+  background: var(--bg);
+}
+.bottom-btn {
+  flex: 1; border: none; border-radius: 8px;
+  background: var(--bg3); color: var(--text);
+  font-size: 15px; font-weight: 500; cursor: pointer;
+  padding: 10px 0; max-height: 56px;
+  -webkit-tap-highlight-color: transparent;
+}
+.bottom-btn:active { filter: brightness(1.4); }
+.bottom-btn:disabled { color: var(--text3); cursor: default; filter: none; }
+.bottom-btn.btn-mail-active { color: var(--green-ok); }
+
+/* ══════════════════════════════════
+   Scan screen
+══════════════════════════════════ */
 #scan-screen { position: relative; background: #000; }
 #video { width: 100%; height: 100dvh; object-fit: cover; display: block; }
 #crop-outline {
@@ -97,110 +177,200 @@ body.highcontrast .btn-mail:disabled { background: #ccc; color: #666; }
   box-shadow: 0 0 0 9999px rgba(0,0,0,0.35);
   pointer-events: none;
 }
-#crop-outline::before, #crop-outline::after { content: ''; position: absolute; width: 20px; height: 20px; border-color: #00dc64; border-style: solid; }
+#crop-outline::before, #crop-outline::after {
+  content: ''; position: absolute; width: 20px; height: 20px;
+  border-color: #00dc64; border-style: solid;
+}
 #crop-outline::before { top: -2px; left: -2px; border-width: 3px 0 0 3px; }
 #crop-outline::after  { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; }
-#engine-badge { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); padding: 4px 10px; border-radius: 20px; font-size: 12px; color: var(--text2); pointer-events: none; z-index: 5; }
+#engine-badge {
+  position: absolute; top: 12px; left: 12px;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  padding: 4px 10px; border-radius: 20px; font-size: 12px; color: #aaa;
+  pointer-events: none; z-index: 5;
+}
 #scan-status {
   position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
   background: rgba(0,0,0,0.7); padding: 6px 16px; border-radius: 20px;
   font-size: 13px; color: #facc15; display: none; z-index: 5;
 }
 #scan-status.visible { display: block; }
-
-.scan-bar { position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; padding: 20px 36px; padding-bottom: max(20px, env(safe-area-inset-bottom)); z-index: 5; }
-.btn-back { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.6); color: var(--text); width: 56px; height: 56px; border-radius: 50%; font-size: 22px; cursor: pointer; }
-.btn-capture { background: #fff; border: 5px solid #888; color: #111; width: 76px; height: 76px; border-radius: 50%; font-size: 13px; font-weight: 700; cursor: pointer; }
+.scan-bar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 36px; padding-bottom: max(20px, env(safe-area-inset-bottom)); z-index: 5;
+}
+.btn-scan-back {
+  background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.6); color: #fff;
+  width: 56px; height: 56px; border-radius: 50%; font-size: 22px; cursor: pointer;
+}
+.btn-capture {
+  background: #fff; border: 5px solid #888; color: #111;
+  width: 76px; height: 76px; border-radius: 50%; font-size: 13px;
+  font-weight: 700; cursor: pointer; letter-spacing: 0.03em;
+}
 .btn-capture:disabled { opacity: 0.45; cursor: default; }
 .scan-spacer { width: 56px; }
 
-/* ── Debug overlay ── */
-#debug-overlay { display: none; position: absolute; inset: 0; z-index: 30; background: rgba(0,0,0,0.94); flex-direction: column; padding: 20px; gap: 10px; overflow-y: auto; color: #fff; }
+/* ══════════════════════════════════
+   Debug overlay (altid mørk)
+══════════════════════════════════ */
+#debug-overlay {
+  display: none; position: absolute; inset: 0; z-index: 30;
+  background: rgba(0,0,0,0.94); flex-direction: column;
+  padding: 20px; gap: 10px; overflow-y: auto; color: #fff;
+}
 #debug-overlay.visible { display: flex; }
 .debug-title { font-size: 16px; font-weight: 700; color: #facc15; }
 .debug-section { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px; }
-.debug-content { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 10px; font-size: 13px; color: #ccc; font-family: monospace; white-space: pre-wrap; word-break: break-all; max-height: 160px; overflow-y: auto; }
+.debug-content {
+  background: #1a1a1a; border: 1px solid #333; border-radius: 8px;
+  padding: 10px; font-size: 13px; color: #ccc;
+  font-family: monospace; white-space: pre-wrap; word-break: break-all;
+  max-height: 160px; overflow-y: auto;
+}
 .debug-content.ok  { border-color: #15803d; color: #4ade80; }
 .debug-content.err { border-color: #c0392b; color: #ff6b6b; }
-.btn-debug-close { background: var(--accent); border: none; color: var(--text); padding: 14px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: auto; }
-
-/* ── Review screen ── */
-#review-screen { position: relative; background: #000; }
-#review-capture-wrap { flex: 0 0 auto; background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-#review-capture-wrap img { width: 100%; height: 100%; object-fit: contain; }
-#review-capture-wrap.empty { background: #000; }
-
-#review-list-wrap { flex: 0 0 auto; display: flex; gap: 6px; padding: 8px 12px; background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-#review-arrows { display: flex; flex-direction: column; justify-content: space-between; width: 36px; flex-shrink: 0; }
-.arrow-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text3); border-radius: 8px; font-size: 16px; cursor: pointer; flex: 1; }
-.arrow-btn.active { color: var(--green-ok); border-color: var(--accent2); background: var(--blue-bg); }
-.arrow-btn:disabled { cursor: default; }
-#review-slots { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-.review-slot { flex: 1; display: flex; align-items: center; gap: 6px; }
-.review-slot.empty-slot { visibility: hidden; }
-.review-slot input {
-  flex: 1; height: 100%; background: var(--bg2); border: 1px solid var(--border); color: var(--text);
-  border-radius: 8px; padding: 0 10px; font-variant-numeric: tabular-nums;
+.btn-debug-close {
+  background: #1d4ed8; border: none; color: #fff;
+  padding: 14px; border-radius: 10px; font-size: 15px; font-weight: 600;
+  cursor: pointer; margin-top: auto;
 }
-.review-slot.active-slot input { border-color: var(--accent); background: var(--blue-bg); }
-.review-slot .btn-remove { width: 32px; height: 32px; font-size: 14px; flex-shrink: 0; }
-.review-slot.is-add input { color: var(--text2); }
 
-#review-input-wrap { flex: 1 1 auto; display: flex; flex-direction: column; padding: 8px 12px; min-height: 0; }
-#review-mode-toggle-row { display: flex; justify-content: flex-end; margin-bottom: 6px; }
-.btn-mode-toggle { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); font-size: 12px; padding: 5px 12px; border-radius: 14px; cursor: pointer; }
-#numpad { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; min-height: 0; }
-.np-btn { background: var(--bg3); border: none; color: var(--text); border-radius: 8px; font-size: 20px; font-weight: 500; cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; }
-.np-btn:active { filter: brightness(1.4); }
-.np-btn.np-special { color: var(--text2); font-size: 16px; }
-#alpha-input-wrap { display: none; flex: 1; }
-#alpha-input-wrap.visible { display: flex; }
-#alpha-input {
-  flex: 1; background: var(--bg2); border: 1px solid var(--border); color: var(--text);
-  border-radius: 10px; padding: 0 14px; font-size: 20px;
+/* ══════════════════════════════════
+   Bekræft-dialog (Reset)
+══════════════════════════════════ */
+.confirm-modal {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.82); z-index: 200;
+  align-items: center; justify-content: center;
 }
-#numpad.hidden-mode { display: none; }
+.confirm-modal.active { display: flex; }
+.confirm-box {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 18px;
+  padding: 24px; width: 80%; max-width: 340px; text-align: center;
+}
+.confirm-box p { font-size: 16px; color: var(--text); margin-bottom: 20px; }
+.confirm-buttons { display: flex; gap: 10px; }
+.btn-confirm-ok     { flex: 1; padding: 14px; border: none; border-radius: 10px; background: var(--red); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+.btn-confirm-cancel { flex: 1; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg3); color: var(--text); font-size: 15px; cursor: pointer; }
 
-#review-bottom-bar { flex: 0 0 auto; display: flex; gap: 10px; padding: 0 16px; padding-bottom: max(12px, env(safe-area-inset-bottom)); align-items: stretch; }
-#review-bottom-bar .btn { height: 100%; }
-#review-bottom-bar .btn-back-x { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3); color: var(--text); }
-
-/* ── Settings ── */
-.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 200; align-items: center; justify-content: center; }
+/* ══════════════════════════════════
+   Settings modal
+══════════════════════════════════ */
+.modal {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.82); z-index: 200;
+  align-items: center; justify-content: center;
+}
 .modal.active { display: flex; }
-.modal-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 18px; padding: 24px; width: 90%; max-width: 420px; max-height: 90dvh; overflow-y: auto; }
-.modal-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
-.modal-section { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin: 18px 0 10px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+.modal-box {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 18px;
+  padding: 24px; width: 90%; max-width: 420px; max-height: 90dvh; overflow-y: auto;
+}
+.modal-title { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.modal-section {
+  font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em;
+  margin: 18px 0 10px; border-bottom: 1px solid var(--border); padding-bottom: 4px;
+}
 .modal-box label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 4px; margin-top: 10px; }
-.modal-box input[type=email], .modal-box input[type=number], .modal-box input[type=text], .modal-box input[type=password] { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 11px 12px; border-radius: 9px; font-size: 15px; }
+.modal-box input[type=email],
+.modal-box input[type=number],
+.modal-box input[type=text],
+.modal-box input[type=password] {
+  width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+  padding: 11px 12px; border-radius: 9px; font-size: 15px;
+}
 .setting-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
 .setting-row label { margin: 0; }
 .toggle { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
 .toggle input { opacity: 0; width: 0; height: 0; }
-.toggle-track { position: absolute; inset: 0; background: #333; border-radius: 13px; cursor: pointer; transition: background 0.2s; }
+.toggle-track {
+  position: absolute; inset: 0; background: #333; border-radius: 13px;
+  cursor: pointer; transition: background 0.2s;
+}
 .toggle input:checked + .toggle-track { background: var(--accent); }
-.toggle-track::after { content: ''; position: absolute; width: 20px; height: 20px; background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; }
+.toggle-track::after {
+  content: ''; position: absolute; width: 20px; height: 20px;
+  background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s;
+}
 .toggle input:checked + .toggle-track::after { transform: translateX(18px); }
 .modal-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
 .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
-.btn-save { background: var(--accent); color: var(--text); }
-.btn-cancel { background: var(--bg3); color: var(--text2); }
+.btn-save   { flex: 1; padding: 14px; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+.btn-cancel { flex: 1; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg3); color: var(--text); font-size: 15px; cursor: pointer; }
+
+/* ══════════════════════════════════
+   Højkontrast overrides
+══════════════════════════════════ */
+body.highcontrast .btn-capture { background: #fff; border-color: #000; color: #000; }
+body.highcontrast .btn-scan-back { background: rgba(255,255,255,0.9); border-color: #000; color: #000; }
+body.highcontrast .np-btn { background: #f0f0f0; color: #000; border: 1px solid #000; }
+body.highcontrast #main-input-wrap { background: #f0f0f0; }
+body.highcontrast .btn-add-item,
+body.highcontrast .btn-mode-toggle { background: #f0f0f0; border-color: #000; color: #000; }
+body.highcontrast #main-bottom-bar { background: #f0f0f0; border-color: #000; }
+body.highcontrast .bottom-btn { background: #f0f0f0; color: #000; border: 1px solid #000; }
+body.highcontrast .bottom-btn.btn-mail-active { color: #006600; }
+body.highcontrast .bottom-btn:disabled { background: #ddd; color: #999; border-color: #aaa; }
+body.highcontrast .btn-save,
+body.highcontrast .btn-cancel { background: #f0f0f0; border-color: #000; color: #000; }
+body.highcontrast .btn-confirm-ok { background: #FF0000; color: #fff; }
+body.highcontrast .btn-confirm-cancel { background: #f0f0f0; border-color: #000; color: #000; }
+body.highcontrast .slot-remove { background: #e0e0e0; color: #000; }
+body.highcontrast #main-list-wrap { background: #f0f0f0; }
+body.highcontrast .toggle-track { background: #ccc; }
+body.highcontrast .toggle input:checked + .toggle-track { background: #000; }
+body.highcontrast .main-settings-btn { background: #e0e0e0; color: #000; }
 </style>
 </head>
 <body>
 
 <!-- ════════ Main ════════ -->
 <div id="main-screen" class="screen active">
-  <div class="screen-header">
-    <div class="screen-title">Leverancer</div>
-    <button class="btn-settings" onclick="openSettings()">⚙</button>
+
+  <div id="main-capture-wrap">
+    <img id="main-capture-img" src="" alt="" style="display:none">
+    <div id="main-capture-empty">Intet billede endnu</div>
   </div>
-  <div class="order-list" id="order-list">
-    <div class="empty-msg">Ingen ordrer scannet endnu</div>
+
+  <div id="main-list-wrap">
+    <div id="main-list-arrows">
+      <button class="arrow-btn" id="arrow-up"   onclick="navigateList(-1)">▲</button>
+      <button class="arrow-btn" id="arrow-down" onclick="navigateList(1)">▼</button>
+    </div>
+    <div id="main-list-slots"></div>
   </div>
-  <div class="bottom-bar">
-    <button class="btn btn-scan" onclick="goToScan()">📷 Scan</button>
-    <button class="btn btn-mail" id="mail-btn" onclick="openMail()" disabled>✉ Dan mail</button>
+
+  <div id="main-input-wrap">
+    <div id="input-controls-row">
+      <button class="btn-add-item" onclick="addNewItem()">+ Tilføj</button>
+      <button class="btn-mode-toggle" id="mode-toggle-btn" onclick="toggleInputMode()" style="text-align:center">ABC</button>
+      <button class="main-settings-btn" style="background:var(--bg3);border:none;color:var(--text2);border-radius:8px;font-size:18px;cursor:pointer;width:100%;height:100%" onclick="openSettings()">⚙</button>
+    </div>
+    <div id="numpad">
+      <button class="np-btn" onclick="npInput('1')">1</button>
+      <button class="np-btn" onclick="npInput('2')">2</button>
+      <button class="np-btn" onclick="npInput('3')">3</button>
+      <button class="np-btn" onclick="npInput('4')">4</button>
+      <button class="np-btn" onclick="npInput('5')">5</button>
+      <button class="np-btn" onclick="npInput('6')">6</button>
+      <button class="np-btn" onclick="npInput('7')">7</button>
+      <button class="np-btn" onclick="npInput('8')">8</button>
+      <button class="np-btn" onclick="npInput('9')">9</button>
+      <button class="np-btn np-special" onclick="npComma()">,</button>
+      <button class="np-btn" onclick="npInput('0')">0</button>
+      <button class="np-btn np-special" onclick="npBackspace()">⌫</button>
+    </div>
+    <div id="alpha-input-wrap">
+      <input type="text" id="alpha-input" placeholder="Indtast tekst…" oninput="onAlphaInput(this.value)">
+    </div>
+  </div>
+
+  <div id="main-bottom-bar">
+    <button class="bottom-btn" id="btn-reset" onclick="doReset()">Reset</button>
+    <button class="bottom-btn" onclick="goToScan()">📷 Scan</button>
+    <button class="bottom-btn btn-mail-active" id="btn-mail" onclick="openMail()" disabled>✉ Dan mail</button>
   </div>
 </div>
 
@@ -234,52 +404,20 @@ body.highcontrast .btn-mail:disabled { background: #ccc; color: #666; }
   </div>
 
   <div class="scan-bar">
-    <button class="btn-back" onclick="goToMain()">✕</button>
+    <button class="btn-scan-back" onclick="goToMain()">✕</button>
     <button class="btn-capture" id="capture-btn" onclick="captureAndScan()">SCAN</button>
     <div class="scan-spacer"></div>
   </div>
 </div>
 
-<!-- ════════ Review ════════ -->
-<div id="review-screen" class="screen">
-  <div id="review-capture-wrap">
-    <img id="review-capture-img" src="" alt="">
-  </div>
-
-  <div id="review-list-wrap">
-    <div id="review-arrows">
-      <button class="arrow-btn" id="arrow-up"   onclick="navigateList(-1)">▲</button>
-      <button class="arrow-btn" id="arrow-down" onclick="navigateList(1)">▼</button>
+<!-- ════════ Bekræft Reset ════════ -->
+<div class="confirm-modal" id="confirm-reset-modal">
+  <div class="confirm-box">
+    <p>Ryd alle ordrenumre?</p>
+    <div class="confirm-buttons">
+      <button class="btn-confirm-cancel" onclick="closeConfirmReset()">Annuller</button>
+      <button class="btn-confirm-ok"     onclick="confirmReset()">Ryd</button>
     </div>
-    <div id="review-slots"></div>
-  </div>
-
-  <div id="review-input-wrap">
-    <div id="review-mode-toggle-row">
-      <button class="btn-mode-toggle" id="mode-toggle-btn" onclick="toggleInputMode()">ABC</button>
-    </div>
-    <div id="numpad">
-      <button class="np-btn" onclick="rnpInput('1')">1</button>
-      <button class="np-btn" onclick="rnpInput('2')">2</button>
-      <button class="np-btn" onclick="rnpInput('3')">3</button>
-      <button class="np-btn" onclick="rnpInput('4')">4</button>
-      <button class="np-btn" onclick="rnpInput('5')">5</button>
-      <button class="np-btn" onclick="rnpInput('6')">6</button>
-      <button class="np-btn" onclick="rnpInput('7')">7</button>
-      <button class="np-btn" onclick="rnpInput('8')">8</button>
-      <button class="np-btn" onclick="rnpInput('9')">9</button>
-      <button class="np-btn np-special" onclick="rnpSpace()">,</button>
-      <button class="np-btn" onclick="rnpInput('0')">0</button>
-      <button class="np-btn np-special" onclick="rnpBackspace()">⌫</button>
-    </div>
-    <div id="alpha-input-wrap">
-      <input type="text" id="alpha-input" placeholder="Indtast tekst…" oninput="onAlphaInput(this.value)">
-    </div>
-  </div>
-
-  <div id="review-bottom-bar">
-    <button class="btn btn-back-x" onclick="closeReview('x')">✕</button>
-    <button class="btn btn-scan" id="review-scan-btn" onclick="closeReview('scan')">📷 Scan</button>
   </div>
 </div>
 
@@ -302,7 +440,7 @@ body.highcontrast .btn-mail:disabled { background: #ccc; color: #666; }
     <label>Google Vision API-nøgle</label>
     <input type="password" id="s-vision-key" placeholder="AIza…">
     <div class="modal-hint">Gemmes lokalt på enheden.</div>
-    <div class="setting-row">
+    <div class="setting-row" style="margin-top:10px">
       <label>Vis debug-rapport efter scan</label>
       <label class="toggle"><input type="checkbox" id="s-debug"><div class="toggle-track"></div></label>
     </div>
@@ -319,7 +457,7 @@ body.highcontrast .btn-mail:disabled { background: #ccc; color: #666; }
     <label>Crop højde (%)</label>
     <input type="number" id="s-crop-height" min="20" max="100" step="5">
 
-    <div class="modal-section">Review-skærm layout</div>
+    <div class="modal-section">Layout</div>
     <label>Capture-billede (% af skærmhøjde)</label>
     <input type="number" id="s-review-capture" min="0" max="70" step="5">
     <label>Ordrenummer-liste (% af skærmhøjde)</label>
@@ -330,11 +468,17 @@ body.highcontrast .btn-mail:disabled { background: #ccc; color: #666; }
     <input type="number" id="s-review-fontsize" min="12" max="30" step="1">
     <label>Bundbjælke (% af skærmhøjde)</label>
     <input type="number" id="s-review-bottombar" min="6" max="25" step="1">
-    <div class="modal-hint">Tastatur/numpad fylder resten — minimum 30% sikres altid.</div>
+    <div class="modal-hint">Numpad fylder resten — minimum 30% sikres altid.</div>
+
+    <div class="modal-section">Reset</div>
+    <div class="setting-row">
+      <label>Bekræft inden reset</label>
+      <label class="toggle"><input type="checkbox" id="s-confirm-reset"><div class="toggle-track"></div></label>
+    </div>
 
     <div class="modal-buttons">
-      <button class="btn btn-save"   onclick="saveSettings()">Gem</button>
-      <button class="btn btn-cancel" onclick="closeSettings()">Annuller</button>
+      <button class="btn-cancel" onclick="closeSettings()">Annuller</button>
+      <button class="btn-save"   onclick="saveSettings()">Gem</button>
     </div>
   </div>
 </div>
@@ -343,77 +487,100 @@ body.highcontrast .btn-mail:disabled { background: #ccc; color: #666; }
 // ════════════════════════════════════════════════════════════
 // State
 // ════════════════════════════════════════════════════════════
-// mainItems: [{ id, number, customerNumber|null }]
-let mainItems   = [];
+let mainItems   = []; // [{ id, number, customerNumber|null }]
 let stream      = null;
 let lastDataUrl = '';
 let debugLog    = {};
 
-// Review screen state
-let reviewMode        = 'scan';   // 'scan' | 'single'
-let pendingItems       = [];      // [{ id, number, customerNumber }]
-let editingMainId      = null;
-let scanCustomerNumber = null;    // customer number detected for the CURRENT scan session
-let startIdx            = 0;
-let activeIdx            = 0;
-let activeBuffer         = '';
-let reviewInputMode     = 'numeric';
+// Liste/editing state
+let startIdx    = 0;
+let activeIdx   = -1; // -1 = intet aktivt
+let activeBuffer = '';
+let inputMode   = 'numeric';
 
 // ════════════════════════════════════════════════════════════
 // Settings
 // ════════════════════════════════════════════════════════════
 function loadSettings() {
   return {
-    highcontrast: localStorage.getItem('s-highcontrast') === 'true',
-    email:        localStorage.getItem('s-email')          || 'europartfraget@gmail.com',
-    visionKey:    localStorage.getItem('s-vision-key')      || '',
-    debug:        localStorage.getItem('s-debug')           === 'true',
-    torch:        localStorage.getItem('s-torch')           !== 'false',
-    torchDelay:   parseInt(localStorage.getItem('s-torch-delay') || '150'),
-    cropTop:      parseFloat(localStorage.getItem('s-crop-top')    || '20') / 100,
-    cropHeight:   parseFloat(localStorage.getItem('s-crop-height') || '60') / 100,
-    reviewCapturePct:   parseFloat(localStorage.getItem('s-review-capture')   || '35'),
-    reviewListPct:      parseFloat(localStorage.getItem('s-review-list')      || '25'),
-    reviewSlots:        Math.max(2, parseInt(localStorage.getItem('s-review-slots') || '3')),
-    reviewFontSize:     parseInt(localStorage.getItem('s-review-fontsize')    || '18'),
-    reviewBottomBarPct: parseFloat(localStorage.getItem('s-review-bottombar') || '12'),
+    highcontrast:     localStorage.getItem('s-highcontrast')   === 'true',
+    email:            localStorage.getItem('s-email')          || 'europartfraget@gmail.com',
+    visionKey:        localStorage.getItem('s-vision-key')     || '',
+    debug:            localStorage.getItem('s-debug')          === 'true',
+    torch:            localStorage.getItem('s-torch')          !== 'false',
+    torchDelay:       parseInt(localStorage.getItem('s-torch-delay')     || '150'),
+    cropTop:          parseFloat(localStorage.getItem('s-crop-top')      || '2')  / 100,
+    cropHeight:       parseFloat(localStorage.getItem('s-crop-height')   || '40') / 100,
+    capturePct:       parseFloat(localStorage.getItem('s-review-capture')|| '35'),
+    listPct:          parseFloat(localStorage.getItem('s-review-list')   || '22'),
+    slots:            Math.max(2, parseInt(localStorage.getItem('s-review-slots')   || '3')),
+    fontSize:         parseInt(localStorage.getItem('s-review-fontsize') || '18'),
+    bottomBarPct:     parseFloat(localStorage.getItem('s-review-bottombar')|| '12'),
+    confirmReset:     localStorage.getItem('s-confirm-reset')  !== 'false',
   };
 }
 let cfg = loadSettings();
-// Anvend gemt farvetema ved opstart
 if (cfg.highcontrast) document.body.classList.add('highcontrast');
 
 function openSettings() {
-  document.getElementById('s-highcontrast').checked  = cfg.highcontrast;
-  document.getElementById('s-email').value           = cfg.email;
-  document.getElementById('s-vision-key').value       = cfg.visionKey;
-  document.getElementById('s-debug').checked          = cfg.debug;
-  document.getElementById('s-torch').checked          = cfg.torch;
-  document.getElementById('s-torch-delay').value      = cfg.torchDelay;
-  document.getElementById('s-crop-top').value         = Math.round(cfg.cropTop * 100);
-  document.getElementById('s-crop-height').value      = Math.round(cfg.cropHeight * 100);
-  document.getElementById('s-review-capture').value   = cfg.reviewCapturePct;
-  document.getElementById('s-review-list').value      = cfg.reviewListPct;
-  document.getElementById('s-review-slots').value     = cfg.reviewSlots;
-  document.getElementById('s-review-fontsize').value  = cfg.reviewFontSize;
-  document.getElementById('s-review-bottombar').value = cfg.reviewBottomBarPct;
+  document.getElementById('s-highcontrast').checked    = cfg.highcontrast;
+  document.getElementById('s-email').value              = cfg.email;
+  document.getElementById('s-vision-key').value         = cfg.visionKey;
+  document.getElementById('s-debug').checked            = cfg.debug;
+  document.getElementById('s-torch').checked            = cfg.torch;
+  document.getElementById('s-torch-delay').value        = cfg.torchDelay;
+  document.getElementById('s-crop-top').value           = Math.round(cfg.cropTop * 100);
+  document.getElementById('s-crop-height').value        = Math.round(cfg.cropHeight * 100);
+  document.getElementById('s-review-capture').value     = cfg.capturePct;
+  document.getElementById('s-review-list').value        = cfg.listPct;
+  document.getElementById('s-review-slots').value       = cfg.slots;
+  document.getElementById('s-review-fontsize').value    = cfg.fontSize;
+  document.getElementById('s-review-bottombar').value   = cfg.bottomBarPct;
+  document.getElementById('s-confirm-reset').checked    = cfg.confirmReset;
   document.getElementById('settings-modal').classList.add('active');
 }
+
 function saveSettings() {
   const hc = document.getElementById('s-highcontrast').checked;
   localStorage.setItem('s-highcontrast', hc);
   document.body.classList.toggle('highcontrast', hc);
-  localStorage.setItem('s-email',           document.getElementById('s-email').value.trim());
-  localStorage.setItem('s-vision-key',      document.getElementById('s-vision-key').value.trim());
-  localStorage.setItem('s-debug',           document.getElementById('s-debug').checked);
-  localStorage.setItem('s-torch',           document.getElementById('s-torch').checked);
+  localStorage.setItem('s-email',            document.getElementById('s-email').value.trim());
+  localStorage.setItem('s-vision-key',       document.getElementById('s-vision-key').value.trim());
+  localStorage.setItem('s-debug',            document.getElementById('s-debug').checked);
+  localStorage.setItem('s-torch',            document.getElementById('s-torch').checked);
+  localStorage.setItem('s-confirm-reset',    document.getElementById('s-confirm-reset').checked);
   ['torch-delay','crop-top','crop-height','review-capture','review-list','review-slots','review-fontsize','review-bottombar']
     .forEach(k => localStorage.setItem('s-' + k, document.getElementById('s-' + k).value));
   cfg = loadSettings();
+  applyLayout();
   updateCropOutline();
   closeSettings();
 }
-function closeSettings() { document.getElementById('settings-modal').classList.remove('active'); }
+
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('active');
+}
+
+// ════════════════════════════════════════════════════════════
+// Layout
+// ════════════════════════════════════════════════════════════
+function applyLayout() {
+  let cap  = cfg.capturePct;
+  let list = cfg.listPct;
+  let bar  = cfg.bottomBarPct;
+  const sum = cap + list + bar;
+  let pad = 100 - sum;
+  if (pad < 30) {
+    const scale = 70 / sum;
+    cap *= scale; list *= scale; bar *= scale;
+    pad = 30;
+  }
+  document.getElementById('main-capture-wrap').style.flexBasis = cap + '%';
+  document.getElementById('main-list-wrap').style.flexBasis    = list + '%';
+  document.getElementById('main-bottom-bar').style.flexBasis   = bar + '%';
+  document.getElementById('main-input-wrap').style.flexBasis   = pad + '%';
+  document.getElementById('main-list-slots').style.fontSize    = cfg.fontSize + 'px';
+}
 
 // ════════════════════════════════════════════════════════════
 // Audio
@@ -434,19 +601,21 @@ const playBip   = () => beep(880, 0.12);
 const playError = () => beep(220, 0.45);
 
 // ════════════════════════════════════════════════════════════
-// Navigation between top-level screens
+// Navigation
 // ════════════════════════════════════════════════════════════
 function show(id) { document.getElementById(id).classList.add('active'); }
 function hide(id) { document.getElementById(id).classList.remove('active'); }
 
 function goToMain() {
   setTorch(false); stopCamera();
-  _debugCloseToReview = false; closeDebug(); _debugCloseToReview = true;
-  hide('scan-screen'); hide('review-screen'); show('main-screen');
-  renderMainList();
+  document.getElementById('debug-overlay').classList.remove('visible');
+  hide('scan-screen'); show('main-screen');
+  renderList();
 }
+
 function goToScan() {
-  hide('main-screen'); hide('review-screen'); show('scan-screen');
+  commitActiveBuffer();
+  hide('main-screen'); show('scan-screen');
   startCamera();
 }
 
@@ -485,7 +654,7 @@ function updateCropOutline() {
 // ════════════════════════════════════════════════════════════
 function captureRawFrame(video) {
   const srcW = video.videoWidth, srcH = video.videoHeight;
-  if (!srcW || !srcH) throw new Error('Video ikke klar (dimensioner ' + srcW + 'x' + srcH + ')');
+  if (!srcW || !srcH) throw new Error('Video ikke klar (' + srcW + 'x' + srcH + ')');
   const cropY = Math.floor(srcH * cfg.cropTop);
   const cropH = Math.floor(srcH * cfg.cropHeight);
   const canvas = document.getElementById('canvas');
@@ -503,14 +672,16 @@ function captureRawFrame(video) {
 async function runGoogleVision(dataUrl) {
   if (!cfg.visionKey) throw new Error('Google Vision API-nøgle mangler — tjek indstillinger');
   const base64 = dataUrl.split(',')[1];
-  const url = `https://vision.googleapis.com/v1/images:annotate?key=${cfg.visionKey}`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      requests: [{ image: { content: base64 }, features: [{ type: 'TEXT_DETECTION', maxResults: 1 }] }]
-    })
-  });
+  const response = await fetch(
+    `https://vision.googleapis.com/v1/images:annotate?key=${cfg.visionKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [{ image: { content: base64 }, features: [{ type: 'TEXT_DETECTION', maxResults: 1 }] }]
+      })
+    }
+  );
   const statusLine = `HTTP ${response.status} ${response.statusText}`;
   if (!response.ok) throw new Error(statusLine + '\n' + await response.text());
   const data = await response.json();
@@ -522,20 +693,19 @@ async function runGoogleVision(dataUrl) {
   return { text, responseInfo: statusLine + ' | tegn aflæst: ' + text.length };
 }
 
-// ── Parsing ──
-// Ordrelinjen er den linje der slutter med "/ initialer" (2-4 bogstaver — udelukker fx "A/S", evt. mellemrum før/efter skråstreg)
+// ── Ordrelinje: ikke Fra/From, slutter med /XX (2-4 bogstaver)
+// — "A/S" og lignende 1-bogstavs forkortelser udelukkes med {2,4}
 function extractOrderLine(text) {
   const lines = text.split('\n');
   return lines.find(l => !/Fra|From/i.test(l) && /\/\s*[A-Za-zÆØÅæøå]{2,4}\s*$/.test(l.trim())) || '';
 }
-// Ordrenumre: diskrete 4-6-cifrede grupper, men KUN fra ordrelinjen
 function extractOrderNumbers(text) {
   const line = extractOrderLine(text);
   if (!line) return { numbers: [], line: '' };
   const matches = line.match(/\b\d{4,6}\b/g);
   return { numbers: matches ? [...new Set(matches)] : [], line };
 }
-// Kundenummer: linjen "Til/To" eller "Til/Te" efterfulgt af præcis 5 cifre (programgenereret felt)
+// Kundenummer: T.{2}/T. + mellemrum + 5 cifre (programgenereret, robust mod OCR-fejl på bogstaver)
 function extractCustomerNumber(text) {
   const m = text.match(/T.{2}\/T.\s+(\d{5})/i);
   return m ? m[1] : null;
@@ -547,8 +717,7 @@ function extractCustomerNumber(text) {
 function setScanStatus(text) {
   const el = document.getElementById('scan-status');
   if (!text) { el.classList.remove('visible'); return; }
-  el.textContent = text;
-  el.classList.add('visible');
+  el.textContent = text; el.classList.add('visible');
 }
 
 async function captureAndScan() {
@@ -561,17 +730,13 @@ async function captureAndScan() {
     await new Promise(r => setTimeout(r, cfg.torchDelay));
   }
 
-  const video = document.getElementById('video');
   let frame;
   try {
-    frame = captureRawFrame(video);
+    frame = captureRawFrame(document.getElementById('video'));
   } catch (e) {
     if (cfg.torch) setTorch(false);
-    alert(e.message);
-    btn.disabled = false;
-    return;
+    alert(e.message); btn.disabled = false; return;
   }
-  lastDataUrl = frame.dataUrl;
   if (cfg.torch) setTorch(false);
 
   debugLog.image = frame.info;
@@ -580,42 +745,65 @@ async function captureAndScan() {
   let text = '', responseInfo = '', failed = false;
   try {
     const r = await runGoogleVision(frame.dataUrl);
-    text = r.text;
-    responseInfo = r.responseInfo;
+    text = r.text; responseInfo = r.responseInfo;
     debugLog.responseOk = true;
   } catch (e) {
     responseInfo = e.message;
     debugLog.responseOk = false;
-    failed = true;
-    playError();
+    failed = true; playError();
   }
 
   debugLog.response = responseInfo;
   debugLog.text = text.trim().substring(0, 500);
-
   const { numbers, line } = extractOrderNumbers(text);
   const customerNumber = extractCustomerNumber(text);
-
   debugLog.orderline = line || null;
   debugLog.numbers   = numbers.length ? numbers.join(', ') : null;
   debugLog.customer  = customerNumber;
   debugLog.failed    = failed;
 
   setScanStatus('');
-  if (!failed) playBip();
-  btn.disabled = false;
+  if (!failed && numbers.length > 0) playBip();
 
   if (cfg.debug) {
-    showDebug(debugLog);
+    showDebug(debugLog, frame.dataUrl, numbers, customerNumber);
   } else {
-    openReviewFromScan(frame.dataUrl, numbers, customerNumber);
+    commitScanResults(frame.dataUrl, numbers, customerNumber);
   }
+
+  btn.disabled = false;
+}
+
+function commitScanResults(dataUrl, numbers, customerNumber) {
+  // Opdater capture-billede
+  lastDataUrl = dataUrl;
+  const img = document.getElementById('main-capture-img');
+  img.src = dataUrl;
+  img.style.display = 'block';
+  document.getElementById('main-capture-empty').style.display = 'none';
+
+  // Tilføj nye ordrenumre øverst (spring dubletter over)
+  const existing = new Set(mainItems.map(o => o.number));
+  const newItems = numbers
+    .filter(n => !existing.has(n))
+    .map(n => ({ id: genId(), number: n, customerNumber }));
+  mainItems = [...newItems, ...mainItems];
+
+  // Gå til main
+  activeIdx = -1; activeBuffer = ''; startIdx = 0;
+  goToMain();
 }
 
 // ════════════════════════════════════════════════════════════
 // Debug overlay
 // ════════════════════════════════════════════════════════════
-function showDebug(log) {
+let _pendingDataUrl = '', _pendingNumbers = [], _pendingCustomer = null;
+
+function showDebug(log, dataUrl, numbers, customerNumber) {
+  _pendingDataUrl = dataUrl;
+  _pendingNumbers = numbers;
+  _pendingCustomer = customerNumber;
+
   const set = (id, text, cls) => {
     const el = document.getElementById(id);
     el.textContent = text;
@@ -627,10 +815,11 @@ function showDebug(log) {
   set('dbg-orderline', log.orderline || '(ingen linje matcher "/ initialer")', log.orderline ? 'ok' : 'err');
   set('dbg-numbers',   log.numbers   || '(ingen fundet)', log.numbers ? 'ok' : 'err');
   set('dbg-customer',  log.customer  || '(ikke aflæst)', log.customer ? 'ok' : 'err');
+
   const rxEls = [
-    ['dbg-rx1', 'Ordrelinje: !/Fra|From/i  +  /\/\s*[A-Za-zÆØÅæøå]{2,4}\s*$/'],
-    ['dbg-rx2', 'Ordrenumre: /\b\d{4,6}\b/g  (kun på ordrelinjen)'],
-    ['dbg-rx3', 'Kundenummer: /T.{2}\/T.\s+(\d{5})/i'],
+    ['dbg-rx1', 'Ordrelinje: !/Fra|From/i  +  /\\/\\s*[A-Za-zÆØÅæøå]{2,4}\\s*$/'],
+    ['dbg-rx2', 'Ordrenumre: /\\b\\d{4,6}\\b/g  (kun på ordrelinjen)'],
+    ['dbg-rx3', 'Kundenummer: /T.{2}\\/T.\\s+(\\d{5})/i'],
   ];
   rxEls.forEach(([id, txt]) => {
     const el = document.getElementById(id);
@@ -639,227 +828,204 @@ function showDebug(log) {
     el.style.background = '#f5f5f5';
     el.style.borderColor = '#bbb';
   });
+
   document.getElementById('debug-overlay').classList.add('visible');
 }
-let _debugCloseToReview = true;
+
 function closeDebug() {
   document.getElementById('debug-overlay').classList.remove('visible');
-  if (_debugCloseToReview && debugLog && debugLog.image) {
-    const numbers = debugLog.numbers ? debugLog.numbers.split(', ') : [];
-    openReviewFromScan(lastDataUrl, numbers, debugLog.customer || null);
-  }
+  commitScanResults(_pendingDataUrl, _pendingNumbers, _pendingCustomer);
+  _pendingDataUrl = ''; _pendingNumbers = []; _pendingCustomer = null;
   debugLog = {};
 }
 
 // ════════════════════════════════════════════════════════════
-// Review screen
+// Liste-rendering og paginering
 // ════════════════════════════════════════════════════════════
 function genId() { return Date.now() + '-' + Math.random().toString(36).slice(2, 8); }
 
-function applyReviewLayout() {
-  let capturePct = cfg.reviewCapturePct;
-  let listPct    = cfg.reviewListPct;
-  let barPct     = cfg.reviewBottomBarPct;
-  const sum3 = capturePct + listPct + barPct;
-  let numpadPct = 100 - sum3;
+function maxStartIdx() { return Math.max(0, mainItems.length - cfg.slots); }
 
-  if (numpadPct < 30) {
-    const scale = 70 / sum3;
-    capturePct *= scale; listPct *= scale; barPct *= scale;
-    numpadPct = 30;
-  }
-
-  document.getElementById('review-capture-wrap').style.flexBasis = capturePct + '%';
-  document.getElementById('review-list-wrap').style.flexBasis    = listPct + '%';
-  document.getElementById('review-bottom-bar').style.flexBasis   = barPct + '%';
-  document.getElementById('review-input-wrap').style.flexBasis   = numpadPct + '%';
-
-  document.getElementById('review-slots').style.fontSize = cfg.reviewFontSize + 'px';
+function computeItemStatuses() {
+  const counts = {};
+  mainItems.forEach(it => {
+    if (it.customerNumber) counts[it.customerNumber] = (counts[it.customerNumber] || 0) + 1;
+  });
+  const maxCount = Object.values(counts).length ? Math.max(...Object.values(counts)) : 0;
+  const topGroups = Object.keys(counts).filter(k => counts[k] === maxCount);
+  const dominant = topGroups.length === 1 ? topGroups[0] : null;
+  const statuses = {};
+  mainItems.forEach(it => {
+    if (!it.customerNumber) { statuses[it.id] = 'blue'; return; }
+    statuses[it.id] = dominant === null ? 'red' : (it.customerNumber === dominant ? 'normal' : 'red');
+  });
+  return statuses;
 }
 
-function openReviewFromScan(dataUrl, numbers, customerNumber) {
-  reviewMode = 'scan';
-  editingMainId = null;
-  scanCustomerNumber = customerNumber;
-  pendingItems = numbers.map(n => ({ id: genId(), number: n, customerNumber }));
-  startIdx = 0;
-  activeIdx = pendingItems.length; // point at the "add new" slot
-  activeBuffer = '';
-  reviewInputMode = 'numeric';
-
-  const img = document.getElementById('review-capture-img');
-  img.src = dataUrl;
-  document.getElementById('review-capture-wrap').classList.remove('empty');
-  document.getElementById('review-scan-btn').style.display = '';
-
-  applyReviewLayout();
-  setInputMode('numeric');
-  renderReviewList();
-
-  hide('scan-screen'); hide('main-screen'); show('review-screen');
-}
-
-function openReviewFromMain(id) {
-  const item = mainItems.find(o => o.id === id);
-  if (!item) return;
-
-  reviewMode = 'single';
-  editingMainId = id;
-  pendingItems = [{ id: item.id, number: item.number, customerNumber: item.customerNumber }];
-  startIdx = 0;
-  activeIdx = 0;
-  activeBuffer = item.number;
-  reviewInputMode = 'numeric';
-
-  document.getElementById('review-capture-img').src = '';
-  document.getElementById('review-capture-wrap').classList.add('empty');
-  document.getElementById('review-scan-btn').style.display = 'none';
-
-  applyReviewLayout();
-  setInputMode('numeric');
-  renderReviewList();
-
-  hide('main-screen'); hide('scan-screen'); show('review-screen');
-}
-
-// ── Virtual list helpers ──
-function virtualLength() {
-  return pendingItems.length + (reviewMode === 'scan' ? 1 : 0);
-}
-function maxStartIdx() {
-  return Math.max(0, virtualLength() - cfg.reviewSlots);
-}
-
-function renderReviewList() {
-  const container = document.getElementById('review-slots');
+function renderList() {
+  const container = document.getElementById('main-list-slots');
   container.innerHTML = '';
+  const statuses = computeItemStatuses();
 
-  for (let i = 0; i < cfg.reviewSlots; i++) {
+  for (let i = 0; i < cfg.slots; i++) {
     const idx = startIdx + i;
     const row = document.createElement('div');
-    row.className = 'review-slot';
+    row.className = 'list-slot';
 
-    if (idx < pendingItems.length) {
-      const item = pendingItems[idx];
+    if (idx < mainItems.length) {
+      const item = mainItems[idx];
       const isActive = idx === activeIdx;
-      if (isActive) row.classList.add('active-slot');
-      row.innerHTML = `
-        <input type="text" readonly value="${escHtml(isActive ? activeBuffer : item.number)}"
-          onclick="selectSlot(${idx})">
-        <button class="btn-remove" onclick="deleteSlot(${idx})">✕</button>`;
-    } else if (reviewMode === 'scan' && idx === pendingItems.length) {
-      const isActive = idx === activeIdx;
-      row.classList.add('is-add');
-      if (isActive) row.classList.add('active-slot');
-      row.innerHTML = `
-        <input type="text" readonly placeholder="Tilføj…" value="${escHtml(isActive ? activeBuffer : '')}"
-          onclick="selectSlot(${idx})">
-        <div style="width:32px;flex-shrink:0"></div>`;
+      const status = statuses[item.id];
+      const statusClass = status === 'red' ? 'status-red' : status === 'blue' ? 'status-blue' : '';
+
+      if (isActive) {
+        row.classList.add('active-slot');
+        row.innerHTML = `
+          <div class="slot-display" onclick="selectSlot(${idx})">${escHtml(activeBuffer)}<span class="slot-cursor"></span></div>
+          <button class="slot-remove" onclick="deleteSlot(${idx})">✕</button>`;
+      } else {
+        row.innerHTML = `
+          <input class="slot-input ${statusClass}" type="text" readonly value="${escHtml(item.number)}" onclick="selectSlot(${idx})">
+          <button class="slot-remove" onclick="deleteSlot(${idx})">✕</button>`;
+      }
     } else {
       row.classList.add('empty-slot');
     }
     container.appendChild(row);
   }
 
-  document.getElementById('arrow-up').disabled   = startIdx <= 0;
-  document.getElementById('arrow-up').classList.toggle('active', startIdx > 0);
-  document.getElementById('arrow-down').disabled = startIdx >= maxStartIdx();
-  document.getElementById('arrow-down').classList.toggle('active', startIdx < maxStartIdx());
+  const up   = document.getElementById('arrow-up');
+  const down = document.getElementById('arrow-down');
+  up.disabled   = startIdx <= 0;
+  down.disabled = startIdx >= maxStartIdx();
+  up.classList.toggle('active', startIdx > 0);
+  down.classList.toggle('active', startIdx < maxStartIdx());
+
+  // Dan mail knap
+  document.getElementById('btn-mail').disabled = mainItems.length === 0;
+}
+
+function updateActiveDisplay() {
+  const rows = document.querySelectorAll('#main-list-slots .list-slot');
+  const i = activeIdx - startIdx;
+  if (i >= 0 && i < rows.length) {
+    const display = rows[i].querySelector('.slot-display');
+    if (display) display.innerHTML = escHtml(activeBuffer) + '<span class="slot-cursor"></span>';
+  }
 }
 
 function selectSlot(idx) {
   if (idx === activeIdx) return;
   commitActiveBuffer();
   activeIdx = idx;
-  activeBuffer = idx < pendingItems.length ? pendingItems[idx].number : '';
-  renderReviewList();
-  syncAlphaInputFromBuffer();
+  activeBuffer = mainItems[idx]?.number || '';
+  renderList();
+  syncAlpha();
 }
 
-function navigateList(direction) {
+function navigateList(dir) {
   commitActiveBuffer();
-  startIdx = Math.min(maxStartIdx(), Math.max(0, startIdx + direction));
-  renderReviewList();
+  startIdx = Math.min(maxStartIdx(), Math.max(0, startIdx + dir));
+  renderList();
 }
 
 function deleteSlot(idx) {
-  pendingItems.splice(idx, 1);
-  if (idx < activeIdx) activeIdx--;
-  else if (idx === activeIdx) { activeIdx = pendingItems.length; activeBuffer = ''; }
+  commitActiveBuffer();
+  mainItems.splice(idx, 1);
+  if (idx <= activeIdx) activeIdx = Math.max(-1, activeIdx - 1);
   startIdx = Math.min(startIdx, maxStartIdx());
-  renderReviewList();
-  syncAlphaInputFromBuffer();
+  activeBuffer = activeIdx >= 0 && activeIdx < mainItems.length ? mainItems[activeIdx].number : '';
+  renderList();
+  syncAlpha();
 }
 
 function commitActiveBuffer() {
+  if (activeIdx < 0 || activeIdx >= mainItems.length) { activeIdx = -1; activeBuffer = ''; return; }
   const val = activeBuffer.trim();
-  if (activeIdx < pendingItems.length) {
-    if (val) {
-      pendingItems[activeIdx].number = val;
-    } else {
-      pendingItems.splice(activeIdx, 1);
-      // Peg på tilføj-slot eller sidst gyldige index efter sletning
-      activeIdx = Math.min(activeIdx, pendingItems.length);
-      activeBuffer = '';
-    }
-  } else if (reviewMode === 'scan' && val) {
-    pendingItems.push({ id: genId(), number: val, customerNumber: scanCustomerNumber });
-    activeIdx = pendingItems.length; // peg på ny tilføj-slot
+  if (!val) {
+    // Tomt felt → fjern item
+    mainItems.splice(activeIdx, 1);
+    startIdx = Math.min(startIdx, maxStartIdx());
+    activeIdx = -1;
     activeBuffer = '';
+    return;
   }
+  // Split på komma → separate items (filtrer tomme segmenter)
+  const segments = val.split(',').map(s => s.trim()).filter(Boolean);
+  if (segments.length <= 1) {
+    // Enkelt ordrenummer — opdater på plads
+    mainItems[activeIdx].number = val;
+  } else {
+    // Flere ordrenumre — erstat det aktive item med alle segmenter
+    const custNr = mainItems[activeIdx].customerNumber;
+    const newItems = segments.map(n => ({ id: genId(), number: n, customerNumber: custNr }));
+    mainItems.splice(activeIdx, 1, ...newItems);
+    // Juster startIdx hvis nødvendigt
+    startIdx = Math.min(startIdx, maxStartIdx());
+  }
+  activeIdx = -1;
+  activeBuffer = '';
 }
 
-function updateActiveSlotDisplay() {
-  const rows = document.querySelectorAll('#review-slots .review-slot');
-  const i = activeIdx - startIdx;
-  if (i >= 0 && i < rows.length) {
-    const input = rows[i].querySelector('input');
-    if (input) input.value = activeBuffer;
-  }
+function addNewItem() {
+  commitActiveBuffer();
+  const newItem = { id: genId(), number: '', customerNumber: null };
+  mainItems.unshift(newItem);
+  startIdx = 0;
+  activeIdx = 0;
+  activeBuffer = '';
+  renderList();
+  if (inputMode === 'alpha') syncAlpha();
 }
 
-// ── Numpad (numeric mode) ──
-function rnpSpace() {
-  // Komma er separator — tæller ikke med i 6-tegns grænsen for ordrenummeret
-  const digits = activeBuffer.replace(/[^0-9]/g, '').length;
-  if (digits === 0) return; // ingen cifre endnu — komma giver ikke mening
-  activeBuffer += ',';
-  updateActiveSlotDisplay();
-}
-function rnpInput(char) {
-  // Tæl kun cifre — komma (separator) tæller ikke med i 6-tegns grænsen
-  const digits = activeBuffer.replace(/[^0-9]/g, '').length;
-  if (digits >= 6) return;
+// ════════════════════════════════════════════════════════════
+// Numpad
+// ════════════════════════════════════════════════════════════
+function npInput(char) {
+  if (activeIdx < 0) return;
+  const segments = activeBuffer.split(',');
+  if (segments[segments.length - 1].length >= 6) return;
   activeBuffer += char;
-  updateActiveSlotDisplay();
-}
-function rnpBackspace() {
-  activeBuffer = activeBuffer.slice(0, -1);
-  updateActiveSlotDisplay();
+  updateActiveDisplay();
 }
 
-// ── Alpha mode ──
-function onAlphaInput(val) {
-  activeBuffer = val;
-  updateActiveSlotDisplay();
+function npComma() {
+  if (activeIdx < 0) return;
+  if (activeBuffer.endsWith(',') || activeBuffer.length === 0) return;
+  const segments = activeBuffer.split(',');
+  if (segments[segments.length - 1].length === 0) return;
+  activeBuffer += ',';
+  updateActiveDisplay();
 }
-function syncAlphaInputFromBuffer() {
+
+function npBackspace() {
+  if (activeIdx < 0) return;
+  activeBuffer = activeBuffer.slice(0, -1);
+  updateActiveDisplay();
+}
+
+// ════════════════════════════════════════════════════════════
+// Alpha mode
+// ════════════════════════════════════════════════════════════
+function onAlphaInput(val) {
+  if (activeIdx < 0) return;
+  activeBuffer = val;
+  updateActiveDisplay();
+}
+function syncAlpha() {
   const el = document.getElementById('alpha-input');
-  if (el) el.value = activeBuffer;
+  if (el) el.value = activeIdx >= 0 ? activeBuffer : '';
 }
 function toggleInputMode() {
-  setInputMode(reviewInputMode === 'numeric' ? 'alpha' : 'numeric');
-}
-function setInputMode(mode) {
-  reviewInputMode = mode;
+  inputMode = inputMode === 'numeric' ? 'alpha' : 'numeric';
   const numpad = document.getElementById('numpad');
   const alphaWrap = document.getElementById('alpha-input-wrap');
   const btn = document.getElementById('mode-toggle-btn');
-  if (mode === 'alpha') {
+  if (inputMode === 'alpha') {
     numpad.classList.add('hidden-mode');
     alphaWrap.classList.add('visible');
     btn.textContent = '123';
-    syncAlphaInputFromBuffer();
+    syncAlpha();
     setTimeout(() => document.getElementById('alpha-input').focus(), 50);
   } else {
     numpad.classList.remove('hidden-mode');
@@ -868,106 +1034,49 @@ function setInputMode(mode) {
   }
 }
 
-// ── Close Review ──
-function closeReview(action) {
+// ════════════════════════════════════════════════════════════
+// Reset
+// ════════════════════════════════════════════════════════════
+function doReset() {
   commitActiveBuffer();
-
-  if (reviewMode === 'single') {
-    if (pendingItems.length === 0) {
-      mainItems = mainItems.filter(o => o.id !== editingMainId);
-    } else {
-      const mi = mainItems.find(o => o.id === editingMainId);
-      if (mi) mi.number = pendingItems[0].number; // customerNumber for single-edit stays as originally stored
-    }
-    goToMain();
-    return;
-  }
-
-  // reviewMode === 'scan'
-  const existingNumbers = new Set(mainItems.map(o => o.number));
-  pendingItems.forEach(p => {
-    if (p.number && !existingNumbers.has(p.number)) {
-      mainItems.push({ id: genId(), number: p.number, customerNumber: p.customerNumber });
-      existingNumbers.add(p.number);
-    }
-  });
-
-  if (action === 'x') {
-    goToMain();
+  if (cfg.confirmReset) {
+    document.getElementById('confirm-reset-modal').classList.add('active');
   } else {
-    show('scan-screen'); hide('review-screen');
-    if (!stream) startCamera();
+    confirmReset();
   }
 }
-
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function confirmReset() {
+  mainItems = []; activeIdx = -1; activeBuffer = ''; startIdx = 0;
+  document.getElementById('confirm-reset-modal').classList.remove('active');
+  renderList();
 }
-
-// ════════════════════════════════════════════════════════════
-// Main list — kundenummer-baseret statusmarkering
-// ════════════════════════════════════════════════════════════
-// Returnerer et map id -> 'normal' | 'red' | 'blue'
-function computeItemStatuses() {
-  const counts = {};
-  mainItems.forEach(it => {
-    if (it.customerNumber) counts[it.customerNumber] = (counts[it.customerNumber] || 0) + 1;
-  });
-  const countValues = Object.values(counts);
-  const maxCount = countValues.length ? Math.max(...countValues) : 0;
-  const topGroups = Object.keys(counts).filter(k => counts[k] === maxCount);
-  const dominant  = topGroups.length === 1 ? topGroups[0] : null;
-
-  const statuses = {};
-  mainItems.forEach(it => {
-    if (!it.customerNumber) { statuses[it.id] = 'blue'; return; } // mangler kundenr -> blå, aldrig overskrevet
-    if (dominant === null)  { statuses[it.id] = 'red';  return; } // intet klart flertal -> rød (kun items med kundenr)
-    statuses[it.id] = it.customerNumber === dominant ? 'normal' : 'red';
-  });
-  return statuses;
-}
-
-function renderMainList() {
-  const list = document.getElementById('order-list');
-  if (!mainItems.length) {
-    list.innerHTML = '<div class="empty-msg">Ingen ordrer scannet endnu</div><div class="order-item" style="margin-top:8px"><button class="order-number-btn" style="color:var(--text3);border-style:dashed" onclick="addNewFromMain()">+ Tilføj ordrenummer</button></div>';
-    document.getElementById('mail-btn').disabled = true;
-    return;
-  }
-  const statuses = computeItemStatuses();
-  const rows = mainItems.map(item => {
-    const status = statuses[item.id];
-    const statusClass = status === 'red' ? 'status-red' : status === 'blue' ? 'status-blue' : '';
-    return `
-    <div class="order-item">
-      <button class="order-number-btn ${statusClass}" onclick="openReviewFromMain('${item.id}')">${escHtml(item.number)}</button>
-      <button class="btn-remove" onclick="removeMainItem('${item.id}')">✕</button>
-    </div>`;
-  });
-  rows.push(`<div class="order-item"><button class="order-number-btn" style="color:var(--text3);border-style:dashed" onclick="addNewFromMain()">+ Tilføj ordrenummer</button></div>`);
-  list.innerHTML = rows.join('');
-  document.getElementById('mail-btn').disabled = false;
-}
-function addNewFromMain() {
-  // Opret et tomt item og åbn Review i single mode
-  const newItem = { id: genId(), number: '', customerNumber: null };
-  mainItems.push(newItem);
-  openReviewFromMain(newItem.id);
-}
-function removeMainItem(id) {
-  mainItems = mainItems.filter(o => o.id !== id);
-  renderMainList();
+function closeConfirmReset() {
+  document.getElementById('confirm-reset-modal').classList.remove('active');
 }
 
 // ════════════════════════════════════════════════════════════
 // Mail
 // ════════════════════════════════════════════════════════════
 function openMail() {
+  commitActiveBuffer();
   const subject = mainItems.map(o => o.number).join(', ');
   window.location.href = `mailto:${cfg.email}?subject=${encodeURIComponent(subject)}`;
-  mainItems = [];
-  renderMainList();
+  mainItems = []; activeIdx = -1; activeBuffer = ''; startIdx = 0;
+  renderList();
 }
+
+// ════════════════════════════════════════════════════════════
+// Helpers
+// ════════════════════════════════════════════════════════════
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ════════════════════════════════════════════════════════════
+// Init
+// ════════════════════════════════════════════════════════════
+applyLayout();
+renderList();
 </script>
 </body>
 </html>
